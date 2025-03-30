@@ -1,3 +1,11 @@
+env/
+migrations/
+.vscode/
+
+*.webassets-cache/
+
+.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

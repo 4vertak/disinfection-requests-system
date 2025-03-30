@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}{% endblock %}</title>
+    <!-- FontFace -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='./css/fonts.css')}}"
+    />
+    <!-- Font Awesome-->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='./css/libs/fontawesome.all.min.css')}}"
+    />
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='./css/libs/bootstrap.min.css')}}"
+    />
+    {% block style %}{% endblock %}
+  </head>
+
+  <body>
+    <header class="header">{% include 'main/_header.html' %}</header>
+
+    <main id="main">{% block content%}{% endblock %}</main>
+    <footer class="pt-5">{% include 'main/_footer.html' %}</footer>
+    <script src="{{ url_for('static', filename='js/libs/jquery.min.js')}}"></script>
+
+    {% block script %}{% endblock %}
+  </body>
+</html>

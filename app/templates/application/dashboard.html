@@ -1,0 +1,535 @@
+{% extends "main/base.html" %} {% block style %}{% assets 'application_all_css'
+%}
+<link
+  href="https://cdn.datatables.net/v/dt/dt-2.2.1/datatables.min.css"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="{{ ASSET_URL }}" />{% endassets %} {% endblock %}
+{% block title %}Заявки{% endblock title %} {% block content %}
+
+<div class="container py-5">
+  <div class="content">
+    <div class="db-pb-5">
+      <div class="row g-4">
+        <div class="col-12 col-xxl-6">
+          <div class="db-mb-8">
+            <h2 class="mb-2">Информационная панель</h2>
+            <h5 class="text-secondary fw-semibold">
+              Вот что происходит прямо сейчас
+            </h5>
+          </div>
+          {% include 'main/_flash.html' %}
+          <div class="d-flex flex-row flex-wrap align-items-center g-4">
+            <div class="p-4">
+              <div class="d-flex align-items-center">
+                <span
+                  class="fa-stack"
+                  style="min-height: 46px; min-width: 46px"
+                >
+                  <span
+                    class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-info-light"
+                    data-fa-transform="shrink-5.5 down-1 rotate--10 left-5"
+                  ></span>
+
+                  <span
+                    class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-info"
+                    data-fa-transform="shrink-6 up-2 left-2"
+                  ></span>
+                  <span
+                    class="fa-stack-1x fa-solid fa-star fa-xl text-info"
+                    data-fa-transform="up-5.5 right-8"
+                  ></span>
+                </span>
+                <div class="ms-3 p-2">
+                  <h3 class="mb-0">
+                    <span id="total-applications"
+                      >{{ total_info['total'] }}</span
+                    ><span id="total-text"></span>
+                  </h3>
+                  <p class="text-body-secondary fs-9 mb-1">Поступило</p>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="d-flex align-items-center">
+                <span
+                  class="fa-stack"
+                  style="min-height: 46px; min-width: 46px"
+                >
+                  <span
+                    class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-warning-light"
+                    data-fa-transform="shrink-5.5 down-1 rotate--10 left-5"
+                  ></span>
+
+                  <span
+                    class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-warning"
+                    data-fa-transform="shrink-6 up-2 left-2"
+                  ></span>
+                  <span
+                    class="fa-stack-1x fa-solid fa-cog fa-xl text-warning"
+                    data-fa-transform="up-5.5 right-8"
+                  ></span>
+                </span>
+                <div class="ms-3 p-2">
+                  <h3 class="mb-1">
+                    <span id="application-in-progress"
+                      >{{ total_info['in_progress'] }}</span
+                    >
+                    <span id="in-progress-text"></span>
+                  </h3>
+                  <p class="text-body-secondary fs-9 mb-1">В работе</p>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="d-flex align-items-center">
+                <span
+                  class="fa-stack"
+                  style="min-height: 46px; min-width: 46px"
+                >
+                  <span
+                    class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-success-light"
+                    data-fa-transform="shrink-5.5 down-1 rotate--10 left-5"
+                  ></span>
+
+                  <span
+                    class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-success"
+                    data-fa-transform="shrink-6 up-2 left-2"
+                  ></span>
+                  <span
+                    class="fa-stack-1x fa-solid fa-check fa-xl text-success"
+                    data-fa-transform="up-5.5 right-8"
+                  ></span>
+                </span>
+                <div class="ms-3 p-2">
+                  <h3 class="mb-0"><span id="applications-completed"
+                    >{{ total_info['completed'] }}<span id="completed-text"></span></h3>
+                  <p class="text-body-secondary fs-9 mb-1">Исполнено</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-3"></div>
+            <div class="ml-auto p-2">
+              <a class="btn btn-primary rounded-pill"
+              href="{{ url_for('dashboard.generate_word_report', period=period) }}"
+            >
+
+                  <i
+                    class="fa-solid fa-file-arrow-down fs-4 me-1" aria-hidden="true"
+                  >::before</i
+                ><span> Загрузить</span>
+              </a>
+            </div>
+          </div>
+          <hr class="bg-body-secondary mb-6 mt-4" />
+          <div class="row flex-between-center mb-4 g-3">
+            <div class="col-auto">
+            </div>
+            <div class="col-6 col-sm-4">
+              <form id="periodForm">
+                <label for="selectPeriod">Выберите период:</label>
+                <select name="period" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option selected> {{period}} </option>
+                    <option value="январь">январь</option>
+                    <option value="февраль">февраль</option>
+                    <option value="март">март</option>
+                    <option value="апрель">апрель</option>
+                    <option value="май">май</option>
+                    <option value="июнь">июнь</option>
+                    <option value="июль">июль</option>
+                    <option value="август">август</option>
+                    <option value="сентябрь">сентябрь</option>
+                    <option value="октябрь">октябрь</option>
+                    <option value="ноябрь">ноябрь</option>
+                    <option value="декабрь">декабрь</option>
+                    <option value="1-й квартал">1-й квартал</option>
+                    <option value="2-й квартал">2-й квартал</option>
+                    <option value="3-й квартал">3-й квартал</option>
+                    <option value="4-й квартал">4-й квартал</option>
+                    <option value="1-е полугодие">1-е полугодие</option>
+                    <option value="2-е полугодие">2-е полугодие</option>
+                    <option value="год"> текущий год</option>
+                </select>
+            </form>
+            
+
+
+            </div>
+          </div>
+          <canvas
+            id="monthlyChart"
+            width="800"
+            height="200"
+          ></canvas>
+        </div>
+        <hr class="bg-body-secondary mb-4 mt-4" />
+        <div class="col-12 col-xxl-6">
+
+          <div class="row g-3">
+            <div class="card">
+              <div class="container">
+                <table class="table">
+                  <thead>
+                    <tr class="table">
+                      <th>Эпидгруппа/участки</th>
+                      {% for area in areas %}
+                          <th>{{ area }}</th>
+                      {% endfor %}
+                      <th>ИТОГО</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in table_data %}
+                    <tr {% if 'ВСЕГО' in row.focus or 'посмертно' in row.focus %}class="font-weight-bold table"{%else%}class="table"{% endif %}>
+                        <td >{{ row.focus }}</td>
+                        {% for area in areas %}
+                            <td>{{ row.get(area, 0) }}</td>
+                        {% endfor %}
+                        {% for col in extra_columns %}
+                            <td>{{ row.get(col, 0) }}</td>
+                        {% endfor %}
+                        <td>{{ row.total }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+       
+        
+        <!---->
+      </div>
+        
+      <hr class="bg-body-secondary mb-4 mt-4" />
+      <div class="col-12 col-xxl-6">
+        <!-- Остановился ЗДЕСЬ-->
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h5 class="mb-1">
+                        Всего заявок по участкам:<span
+                          class="badge badge-phoenix badge-phoenix-warning rounded-pill fs-9 ms-2"
+                          ></span
+                        >
+                      </h5>
+                      <h6 class="text-body-tertiary"> За {{ period }}</h6>
+                    </div>
+                  </div>
+                  <div class=" d-flex justify-content-center pt-3 flex-1">
+                    <canvas id="areasChart" width="400" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="card h-50">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h5 class="mb-1">
+                        Разбивка по группам очагов<span
+                          class="badge badge-phoenix badge-phoenix-warning rounded-pill fs-9 ms-2"
+                        >
+                          </span
+                        >
+                      </h5>
+                      <h6 class="text-body-tertiary">За {{ period }}</h6>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-center pt-3 flex-1">
+                    <canvas id="focusChart" width="400" height="200"></canvas>
+                    
+                  </div>
+                </div>
+              </div>
+              <div class="card h-50">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h5 class="mb-1">
+                        Разбивка по участкам<span
+                          class="badge badge-phoenix badge-phoenix-warning rounded-pill fs-9 ms-2"
+                        >
+                          </span
+                        >
+                      </h5>
+                      <h6 class="text-body-tertiary">За {{ period }}</h6>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-center pt-3 flex-1">
+                    <canvas id="AreasChartDin" width="400" height="200"></canvas>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+           
+          </div>
+        </div>
+      
+    </div>
+    <hr class="bg-body-secondary mb-4 mt-4" />
+    {% if current_user.user_type == 'disinfector' %}
+    <div class="col-12 col-xxl-6">
+      <canvas id="disinfectorsChart" height="400"></canvas>
+    </div>
+    {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block script %}{% assets 'application_dashboard_js' %}
+<script src="https://cdn.datatables.net/v/dt/dt-2.2.1/datatables.min.js"></script>
+
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+
+<script>
+  // Диаграмма по месяцам
+  const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+  const monthlyChart = new Chart(ctxMonthly, {
+      type: 'bar',
+      data: {
+          labels: {{ months|tojson }},
+          datasets: [
+              {
+                  label: 'Поступившие заявки',
+                  data: {{ total_values|tojson }},
+                  backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                  borderColor: 'rgba(75, 192, 192, 1)',
+                  borderWidth: 1
+              },
+              {
+                  label: 'Исполненные заявки',
+                  data: {{ completed_values|tojson }},
+                  backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                  borderColor: 'rgba(153, 102, 255, 1)',
+                  borderWidth: 1
+              }
+          ]
+      },
+      options: {
+          scales: {
+              y: {
+                  beginAtZero: true
+              }
+          }
+      }
+  });
+</script>
+
+<script>
+const ctxAreas = document.getElementById('areasChart').getContext('2d');
+const areasChart = new Chart(ctxAreas, {
+type: 'polarArea',
+data: {
+      labels: {{ areas_labels|tojson }},
+      datasets: [{
+        data: {{ areas_total_values|tojson }},
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)', // Красный
+          'rgba(54, 162, 235, 0.2)', // Синий
+          'rgba(255, 205, 86, 0.2)', // Желтый
+          'rgba(75, 192, 192, 0.2)', // Циановый
+          'rgba(255, 159, 64, 0.2)', // Оранжевый
+          'rgba(153, 102, 255, 0.2)', // Фиолетовый
+          'rgba(255, 99, 71, 0.2)', // Розовый
+          'rgba(0, 255, 0, 0.2)', // Зеленый
+          'rgba(255, 165, 0, 0.2)', // Ярко-оранжевый
+          'rgba(128, 0, 128, 0.2)', // Пурпурный
+          'rgba(0, 128, 128, 0.2)', // Тёмно-циановый
+          'rgba(0, 0, 255, 0.2)' // Синий
+        ]
+      }]
+}
+});
+consol.logconsole.log("Area labels:", areas_labels);
+</script>
+
+<script>
+  const colors = [
+    'rgba(255, 99, 132, 0.5)',
+    'rgba(54, 162, 235, 0.5)',
+    'rgba(255, 206, 86, 0.5)',
+    'rgba(75, 192, 192, 0.5)',
+    'rgba(153, 102, 255, 0.5)',
+    'rgba(255, 159, 64, 0.5)',
+    'rgba(99, 255, 132, 0.5)',
+    'rgba(162, 54, 235, 0.5)',
+    'rgba(206, 86, 255, 0.5)',
+    'rgba(192, 192, 75, 0.5)',
+    'rgba(102, 255, 153, 0.5)',
+    'rgba(159, 64, 255, 0.5)'
+];
+  // Данные, полученные из вашего серверного кода
+  const focusLabels = {{ focus_labels | tojson }};
+  const areaLabelsf = {{ area_labelsf | tojson }};
+  const focusTotalValues = {{ focus_total_values_list | tojson }};
+  
+  // Создание диаграммы
+  const ctx = document.getElementById('focusChart').getContext('2d');
+  const focusChart = new Chart(ctx, {
+      type: 'bar', // тип диаграммы
+      data: {
+          labels: focusLabels,
+          datasets: areaLabelsf.map((area, index) => ({
+              label: area,
+              data: focusTotalValues.map(values => values[index] || 0), // Подставьте 0, если нет данных
+              backgroundColor: colors[index % colors.length], // Используем цвета из массива
+              borderColor: colors[index % colors.length].replace('0.5', '1'), // Прозрачность 1 для границы
+              borderWidth: 1
+          }))
+      },
+      options: {
+          responsive: true,
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  title: {
+                      display: true,
+                      text: 'Количество заявок'
+                  }
+              },
+              x: {
+                  title: {
+                      display: true,
+                      text: 'Эпидемические группы'
+                  }
+              }
+          },
+          plugin: {
+              legend: {
+                  display: true,
+                  position: 'top',
+              },
+          }
+      }
+  });
+</script> 
+
+
+
+<script>
+  // Диаграмма по эпидемическим группам
+const ctxAreasDin = document.getElementById('AreasChartDin').getContext('2d');
+const AreasChartDin = new Chart(ctxAreasDin, {
+type: 'bar',
+data: {
+labels: {{ areas_labels|tojson }},
+datasets: [
+{
+label: 'Поступившие заявки',
+data: {{ areas_total_values|tojson }},
+backgroundColor: 'rgba(75, 192, 192, 0.2)',
+borderColor: 'rgba(75, 192, 192, 1)',
+borderWidth: 1
+},
+{
+label: 'Исполненные заявки',
+data: {{ areas_completed_values|tojson }},
+backgroundColor: 'rgba(153, 102, 255, 0.2)',
+borderColor: 'rgba(153, 102, 255, 1)',
+borderWidth: 1
+}
+]
+},
+options: {
+scales: {
+y: {
+beginAtZero: true
+}
+}
+}
+});
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('disinfectorsChart').getContext('2d');
+    const chartData = {
+      labels: {{ top_disinfectors|map(attribute='name')|list|tojson }},
+      datasets: [
+        {
+          label: 'Количество дезинфекций',
+          data: {{ top_disinfectors|map(attribute='disinfection_count')|list|tojson }},
+          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Общая площадь (м²)',
+          data: {{ top_disinfectors|map(attribute='total_area')|list|tojson }},
+          backgroundColor: 'rgba(255, 99, 132, 0.7)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+          type: 'bar',
+          yAxisID: 'y1'
+        }
+      ]
+    };
+
+    new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Топ дезинфекторов по количеству обработок',
+            font: { size: 16 }
+          },
+          tooltip: {
+            callbacks: {
+              afterBody: function(context) {
+                const index = context[0].dataIndex;
+                return `Площадь: ${chartData.datasets[1].data[index].toFixed(2)} м²`;
+              }
+            }
+          },
+          legend: {
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Количество дезинфекций'
+            },
+            beginAtZero: true
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Площадь (м²)'
+            },
+            grid: {
+              drawOnChartArea: false
+            },
+            beginAtZero: true
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Дезинфекторы'
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+{% endassets %}{% endblock %}
