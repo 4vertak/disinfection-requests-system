@@ -22,30 +22,27 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!phone || phone.trim() === "") {
       return null;
     }
-    // Удаляем все нецифровые символы
+
     const cleaned = phone.replace(/\D/g, "");
 
     if (cleaned.length === 10 || cleaned.length === 11) {
-      return null; // Номер валиден
+      return null;
     } else {
       return "Неправильный формат номера";
     }
   }
 
   function validateFill(listener_value) {
-    // Если поле пустое - возвращаем null
     if (!listener_value || listener_value.trim() === "") return null;
   }
 
-  // Функция для создания/обновления сообщения об ошибке
   function updateError(inputElement, message) {
-    // Удаляем предыдущее сообщение об ошибке, если оно есть
+    
     let errorElement = inputElement.nextElementSibling;
     if (errorElement && errorElement.classList.contains("error-message")) {
       errorElement.remove();
     }
 
-    // Если есть сообщение об ошибке, создаем элемент для него
     if (message) {
       errorElement = document.createElement("div");
       errorElement.className = "error-message text-danger mt-1";
@@ -57,17 +54,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Получаем оба поля для телефона
   const contactPhone = document.getElementById("contact_phone");
   const relativeContactPhone = document.getElementById(
     "relative_contact_phone"
   );
 
-  // ПОлучаем место работы и должность
   const workplace = document.getElementById("workplace");
   const position = document.getElementById("position");
 
-  // Обработчик для основного телефона
   if (contactPhone) {
     contactPhone.addEventListener("blur", function () {
       const error = validatePhone(this.value);
@@ -79,7 +73,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Обработчик для дополнительного телефона
   if (relativeContactPhone) {
     relativeContactPhone.addEventListener("blur", function () {
       if (!this.value || this.value.trim() === "") {
@@ -104,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
       updateError(this, error);
     });
 
-    // Инициализация при загрузке
+    
     if (
       !relativeContactPhone.value ||
       relativeContactPhone.value.trim() === ""
@@ -138,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
       updateError(this, error);
     });
 
-    // Инициализация при загрузке
+    
     if (!workplace.value || workplace.value.trim() === "") {
       workplace.value = "не работает";
       workplace.classList.add("text-muted");
@@ -168,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
       updateError(this, error);
     });
 
-    // Инициализация при загрузке
+    
     if (!position.value || position.value.trim() === "") {
       position.value = "не работает";
       position.classList.add("text-muted");
@@ -177,21 +170,21 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 $(document).ready(function () {
-  // Загружаем все диагнозы с сервера
+  
   $.ajax({
     url: "/api/diagnoses",
     method: "GET",
     dataType: "json",
     success: function (data) {
-      // Инициализируем Select2 после загрузки данных
+      // Инициализируем Select2
       $("#diagnosis_select").select2({
         theme: "bootstrap-5",
         placeholder: "Выберите или введите диагноз",
         allowClear: true,
-        // tags: true, // Разрешаем ввод новых значений
-        data: data, // Передаём загруженные данные
-        minimumInputLength: 0, // Показывать список без ввода
-        language: "ru", // Локализация (если нужно)
+        // tags: true
+        data: data,
+        minimumInputLength: 0,
+        language: "ru",
       });
     },
     error: function (error) {
