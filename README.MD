@@ -43,4 +43,6 @@ flask run
 Собери и запусти контейнер
 
 ```bash
+python -m venv env
+pip install -r requirements.txt
 docker-compose up --build```
