@@ -3,6 +3,7 @@ migrations/
 .vscode/
 
 *.webassets-cache/
+*/gen/
 
 .env
 

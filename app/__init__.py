@@ -1,15 +1,16 @@
+from .domain.services.user_service import UserInitializer
 from flask import Flask
 
-from .bundles import bundles, register_bundles
-from .extensions import db, migrate, login_manager, assets
-from .config import Config
+from .core.bundles import bundles, register_bundles
+from .core.extensions import db, migrate, login_manager, assets
+from .core.config import Config
 
-from .routes.application import application
-from .routes.disinfection import disinfection
-from .routes.dashboard import dashboard
-from .routes.user import user
-from .signals import register_signals
-from .functions import initial_data
+from .routes.application.routes import application
+from .routes.disinfection.routes import disinfection
+from .routes.dashboard.routes import dashboard
+from .routes.user.routes import user
+
+from .core.signals import register_signals
 
 
 
@@ -40,6 +41,8 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
-        initial_data()
+        UserInitializer.initialize_user_id_counter()
+        UserInitializer.create_admin_account()
+        UserInitializer.fill_directories()
 
     return app
