@@ -37,12 +37,7 @@ flask run
 
 ## 🐳 Запуск через Docker
 
-Установи `POSTGRESHOST=postgres`
-Создай виртуальное окружение 
-Установи зависимости
 Собери и запусти контейнер
 
 ```bash
-python -m venv env
-pip install -r requirements.txt
 docker-compose up --build```
