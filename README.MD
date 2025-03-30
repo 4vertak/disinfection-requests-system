@@ -29,10 +29,14 @@
 запусти flask
 
 ```bash
+python -m venv env
+pip install -r requirements.txt
 flask run
 
 
+
 ## 🐳 Запуск через Docker
+
 
 ```bash
 docker-compose up --build
