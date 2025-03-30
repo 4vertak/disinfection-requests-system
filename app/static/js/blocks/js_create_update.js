@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
   // Функция для проверки номера телефона
   function validatePhone(phone) {
-    // Если поле пустое - возвращаем null
     if (!phone || phone.trim() === "") {
       return null;
     }
