@@ -12,6 +12,8 @@ from .routes.user.routes import user
 
 from .core.signals import register_signals
 
+from .domain.models.application.events import register_application_events
+
 
 
 def create_app(config_class=Config):
@@ -44,5 +46,6 @@ def create_app(config_class=Config):
         UserInitializer.initialize_user_id_counter()
         UserInitializer.create_admin_account()
         UserInitializer.fill_directories()
+        register_application_events()
 
     return app
