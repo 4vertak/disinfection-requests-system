@@ -99,7 +99,6 @@ $(document).ready(function () {
     },
     order: {
       idx: 1,
-      dir: "desc",
     },
   });
 });

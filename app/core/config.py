@@ -17,7 +17,8 @@ class Config(object):
     
     SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
     
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,

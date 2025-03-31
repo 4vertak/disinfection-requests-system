@@ -1,5 +1,5 @@
 from flask import jsonify
-from ..models.application.entities import Diagnosis
+from ..models.application.entities import Application, Diagnosis
 from ...core.extensions import db
 
 class ApplicationApiService:

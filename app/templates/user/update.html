@@ -89,7 +89,8 @@ block style %}{% assets 'user_update_css' %}<link
           >
           {{ form.area_id(class='form-control', id="area_id") }}
         </div>
-        {% endif%} {% if current_user.user_type == 'admin'%}
+        {% endif%} {% if current_user.user_type == 'admin' and current_user.id
+        != user.id%}
         <div class="mb-4">
           <label for="user_type" class="form-label text-uppercase"
             >Роль пользователя:</label
