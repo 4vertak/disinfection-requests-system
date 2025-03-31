@@ -108,24 +108,38 @@
                 </div>
               </div>
             </div>
-            <div class="col-3"></div>
-            <div class="ml-auto p-2">
-              <a class="btn btn-primary rounded-pill"
-              href="{{ url_for('dashboard.generate_word_report', period=period) }}"
-            >
+            <div class="p-4">
+              <div class="d-flex align-items-center">
+                <span
+                  class="fa-stack"
+                  style="min-height: 46px; min-width: 46px"
+                >
+                  <span
+                    class="fa-solid fa-square fa-stack-2x dark__text-opacity-50 text-danger-light"
+                    data-fa-transform="shrink-5.5 down-1 rotate--10 left-5"
+                  ></span>
 
-                  <i
-                    class="fa-solid fa-file-arrow-down fs-4 me-1" aria-hidden="true"
-                  >::before</i
-                ><span> Загрузить</span>
-              </a>
+                  <span
+                    class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-danger"
+                    data-fa-transform="shrink-6 up-2 left-2"
+                  ></span>
+                  <span
+                    class="fa-stack-1x fa-solid fa-check fa-xl text-danger"
+                    data-fa-transform="up-5.5 right-8"
+                  ></span>
+                </span>
+                <div class="ms-3 p-2">
+                  <h3 class="mb-0"><span id="applications-completed"
+                    >{{ total_info['refusal'] }}<span id="completed-text"></span></h3>
+                  <p class="text-body-secondary fs-9 mb-1">Отказов</p>
+                </div>
+              </div>
             </div>
           </div>
           <hr class="bg-body-secondary mb-6 mt-4" />
           <div class="row flex-between-center mb-4 g-3">
-            <div class="col-auto">
-            </div>
-            <div class="col-6 col-sm-4">
+            
+            <div class="col-3 col-sm-4" >
               <form id="periodForm">
                 <label for="selectPeriod">Выберите период:</label>
                 <select name="period" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -151,9 +165,11 @@
                     <option value="год"> текущий год</option>
                 </select>
             </form>
-            
-
-
+            </div>
+            <div class="col-6">
+            </div>
+            <div class="col-3 col-sm-4 d-flex justify-content-end">
+              <a class="btn btn-primary rounded-pill" href="{{ url_for('dashboard.generate_word_report', period=period) }}"><i class="fa-solid fa-file-arrow-down fs-4 me-1" aria-hidden="true"></i><span> Загрузить</span></a>
             </div>
           </div>
           <canvas

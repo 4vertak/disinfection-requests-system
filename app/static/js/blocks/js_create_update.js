@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateError(inputElement, message) {
-    
     let errorElement = inputElement.nextElementSibling;
     if (errorElement && errorElement.classList.contains("error-message")) {
       errorElement.remove();
@@ -76,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
     relativeContactPhone.addEventListener("blur", function () {
       if (!this.value || this.value.trim() === "") {
         this.value = "не указан";
-        this.classList.add("text-muted"); // Делаем текст серым
+        this.classList.add("text-muted");
       } else {
         const error = validatePhone(this.value);
         updateError(this, error);
@@ -96,7 +95,6 @@ document.addEventListener("DOMContentLoaded", function () {
       updateError(this, error);
     });
 
-    
     if (
       !relativeContactPhone.value ||
       relativeContactPhone.value.trim() === ""
@@ -130,7 +128,6 @@ document.addEventListener("DOMContentLoaded", function () {
       updateError(this, error);
     });
 
-    
     if (!workplace.value || workplace.value.trim() === "") {
       workplace.value = "не работает";
       workplace.classList.add("text-muted");
@@ -160,7 +157,6 @@ document.addEventListener("DOMContentLoaded", function () {
       updateError(this, error);
     });
 
-    
     if (!position.value || position.value.trim() === "") {
       position.value = "не работает";
       position.classList.add("text-muted");
@@ -169,7 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 $(document).ready(function () {
-  
   $.ajax({
     url: "/api/diagnoses",
     method: "GET",

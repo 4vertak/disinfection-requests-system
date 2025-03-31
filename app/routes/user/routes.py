@@ -171,11 +171,15 @@ def logout():
 def delete_user(id):
     if not isinstance(current_user, Administrator):
         abort(403)
-
+        
     user = load_user(id)
     if not user:
         flash('Пользователь не найден.', 'danger')
-        return redirect(url_for('application.all'))
+        return redirect('/admin/users')
+    
+    if current_user.id == id:
+        flash('Нельзя удалить свой аккаут.', 'danger')
+        return redirect('/admin/users')
 
     try:
         with db.session.begin_nested():
@@ -240,7 +244,6 @@ def delete_user(id):
 def users():
     if not isinstance(current_user, Administrator):
         abort(403)
-        
     count_admins = Administrator.query.count()
     count_doctors = Doctor.query.count()
     count_disinfectors = Disinfector.query.count()

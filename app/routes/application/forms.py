@@ -20,7 +20,7 @@ class ApplicationForm(FlaskForm):
         'Диагноз', validators=[Optional()])
     focus_id = SelectField('Очаг', coerce=int, validators=[DataRequired()])
     reason_application = SelectField('Причина дезинфекции', choices=[(
-        'hospitalization', 'Госпитализация'), ('posthumously', 'Посмертно')], default='posthumously', validators=[Optional()])
+        'hospitalization', 'Госпитализация'), ('posthumously', 'Посмертно')], default='hospitalization', validators=[Optional()])
     hospitalization_date = DateField(
         'Дата госпитализации', format='%Y-%m-%d', validators=[Optional()])
     gdu = SelectField('Группа диспансерного наблюдения', choices=[(

@@ -1,10 +1,12 @@
 from datetime import datetime
 from io import BytesIO
+
+from sqlalchemy import desc
 from ..models.application.entities import Application, Diagnosis, Disinfection, EpidemicFocus
 from ..models.audit.entities import ApplicationAuditLog
 from ..models.user.entities import Area, Disinfector, Doctor
 from ...core.extensions import db
-# from ..utils.logger import logger
+
 from asyncio.log import logger
 from docxtpl import DocxTemplate
 
@@ -12,11 +14,10 @@ class ApplicationService:
     @staticmethod
     def get_applications(user_id):
         """Запрос списка заявок"""
+        
         query = (db.session.query(Application, Disinfection, Area, Doctor).join(Disinfection, Disinfection.application_id == Application.id).join(Doctor, Doctor.id == Application.user_id).join(Area, Area.id == Doctor.area_id))
-        if isinstance(user_id, Doctor):
-            applications = query.filter(Application.user_id == user_id).order_by(Application.submission_date.asc()).all()
-        else:
-            applications = query.order_by(Application.submission_date.asc()).all()
+
+        applications = query.order_by(desc(Application.user_id == user_id),desc(Application.submission_date)).all()
 
         return applications
 
@@ -60,13 +61,11 @@ class ApplicationService:
         if not application:
             raise ValueError("Application not found")
         
-        # Проверка прав доступа
         if isinstance(user, Doctor) and application.user_id != user.id:
             raise PermissionError("No rights to edit this application")
 
         try:
             application.patient_full_name = form_data.patient_full_name.data
-            # обновление остальных полей...
             application.birth_date = form_data.birth_date.data
             application.address = form_data.address.data
             application.contact_phone = form_data.contact_phone.data
@@ -104,7 +103,6 @@ class ApplicationService:
             raise PermissionError("No rights to delete this application")
 
         try:
-            # Логирование удаления
             audit_log = ApplicationAuditLog(
                 application_id=application.id,
                 changed_by=user.id,
@@ -112,7 +110,7 @@ class ApplicationService:
                 old_data=application.to_dict()
             )
             db.session.add(audit_log)
-            db.session.flush()  # Принудительно фиксируем добавление записи в application_audit_log
+            db.session.flush() 
             db.session.delete(application)
             db.session.commit()
         except Exception as e:
@@ -133,10 +131,8 @@ class ApplicationService:
         diagnosis = Diagnosis.query.get(application.diagnosis_id)
 
         template_path = 'app/templates_docs/application_template.docx'
-        # Загружаем шаблон документа
         doc = DocxTemplate(template_path)
-
-        # Подготавливаем данные для контекста
+        
         context = {
             'focus_id': epid_focus.name,
             'name_area': area.name_area,

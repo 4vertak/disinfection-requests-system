@@ -210,7 +210,7 @@
                       >{% endif %}
                     </td>
                     <td style="text-align: center" class="col-3">
-                      {% if current_user.user_type == "doctor" %}
+                      {% if current_user.user_type == "doctor" and current_user.id == application.user_id%}
                       <a
                         href="{{ url_for('application.update', id=application.id) }}"
                         class="btn btn-sm btn-outline-light"

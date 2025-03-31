@@ -1,5 +1,5 @@
 
-from datetime import date
+from datetime import date, datetime, time
 from docx.shared import Pt
 import os.path
 import secrets
@@ -7,7 +7,6 @@ from PIL import Image
 
 from flask import current_app
 from sqlalchemy import func
-from werkzeug.security import generate_password_hash
 
 from ..domain.models.user.entities import Area, Doctor, Disinfector
 
@@ -49,64 +48,102 @@ def set_font_for_document(doc, font_name='Times New Roman', font_size=12):
             run.font.size = Pt(12)
 
 def get_monthly_data(model, date_field, start_date, end_date):
-    return db.session.query(
-        func.date_trunc('month', getattr(model, date_field)).label('month'),
-        func.count(getattr(model, 'id')).label('total')
-    ).filter(
-        getattr(model, date_field).between(start_date, end_date)
-    ).group_by('month').order_by('month').all()
+    end_date_with_time = datetime.combine(end_date, time.max)
+    
+    group_by_day = (end_date - start_date).days <= 31
+    
+    if group_by_day:
+        query = db.session.query(
+            func.date(getattr(model, date_field)).label('date'),
+            func.count(getattr(model, 'id')).label('count')
+        ).filter(
+            getattr(model, date_field) >= start_date,
+            getattr(model, date_field) <= end_date_with_time
+        ).group_by('date').order_by('date')
+    else:
+        query = db.session.query(
+            func.date_trunc('month', getattr(model, date_field)).label('date'),
+            func.count(getattr(model, 'id')).label('count')
+        ).filter(
+            getattr(model, date_field) >= start_date,
+            getattr(model, date_field) <= end_date_with_time
+        ).group_by('date').order_by('date')
+    
+    return query.all()
 
 
 def get_monthly_data_logs(model, date_field, start_date, end_date):
     months_ru = ["январь", "февраль", "март", "апрель", "май", "июнь",
-                 "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+                "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+    
+    end_date_with_time = datetime.combine(end_date, time.max) if isinstance(end_date, date) else end_date
+    
+    try:
+        monthly_data = db.session.query(
+            func.date_trunc('month', getattr(model, date_field)).label('month'),
+            getattr(model, 'change_type'),
+            func.count(getattr(model, 'id')).label('total')
+        ).filter(
+            getattr(model, date_field) >= start_date,
+            getattr(model, date_field) <= end_date_with_time
+        ).group_by('month', 'change_type').order_by('month').all()
+        
+        result = {}
+        current_date = start_date.replace(day=1)
+        
+        while current_date <= end_date:
+            month_str = f"{months_ru[current_date.month - 1]} {current_date.year}"
+            result[month_str] = {'INSERT': 0, 'UPDATE': 0, 'DELETE': 0}
+            
+            if current_date.month == 12:
+                current_date = current_date.replace(year=current_date.year + 1, month=1)
+            else:
+                current_date = current_date.replace(month=current_date.month + 1)
+        
+        for entry in monthly_data:
+            month_str = f"{months_ru[entry.month.month - 1]} {entry.month.year}"
+            if month_str in result and entry.change_type in result[month_str]:
+                result[month_str][entry.change_type] = entry.total
+                
+        return result
+    
+    except Exception as e:
+        return {f"{months_ru[start_date.month - 1]} {start_date.year}": 
+               {'INSERT': 0, 'UPDATE': 0, 'DELETE': 0}}
 
-    monthly_data = db.session.query(
-        func.date_trunc('month', getattr(model, date_field)).label('month'),
-        getattr(model, 'change_type').label('change_type'),
-        func.count(getattr(model, 'id')).label('total')
-    ).filter(
-        getattr(model, date_field).between(start_date, end_date)
-    ).group_by('month', 'change_type').order_by('month').all()
-
-    result = {
-        f'{months_ru[month - 1]}': {'INSERT': 0, 'UPDATE': 0, 'DELETE': 0}
-        for year in range(start_date.year, end_date.year + 1)
-        for month in range(1, 13)
-        if (year > start_date.year or month >= start_date.month) and (year < end_date.year or month <= end_date.month)
-    }
-
-    for entry in monthly_data:
-        month_number = entry.month.month 
-        month_name = months_ru[month_number - 1]
-        if month_name in result:
-            result[month_name][entry.change_type] = entry.total
-
-    return result
 
 
 def combine_monthly_data(monthly_app_data, monthly_dis_data, start_date, end_date):
     months_ru = ["январь", "февраль", "март", "апрель", "май", "июнь",
                  "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
 
-    combined_data = {
-        f'{months_ru[month - 1]}': {'applications': 0, 'disinfections': 0}
-        for year in range(start_date.year, end_date.year + 1)
-        for month in range(1, 13)
-        if (year > start_date.year or month >= start_date.month) and (year < end_date.year or month <= end_date.month)
-    }
+    combined_data = {}
+    current_date = start_date.replace(day=1)
+    
+    while current_date <= end_date:
+        month_str = months_ru[current_date.month - 1]
+        year_str = str(current_date.year)
+        key = f"{month_str} {year_str}"
+        combined_data[key] = {'applications': 0, 'disinfections': 0}
+        
+        if current_date.month == 12:
+            current_date = current_date.replace(year=current_date.year + 1, month=1)
+        else:
+            current_date = current_date.replace(month=current_date.month + 1)
 
-    for row in monthly_app_data:
-        month_number = row.month.month
-        month_str = months_ru[month_number - 1]
-        if month_str in combined_data:
-            combined_data[month_str]['applications'] = row.total
+    for date_obj, count in monthly_app_data:
+        month_str = months_ru[date_obj.month - 1]
+        year_str = str(date_obj.year)
+        key = f"{month_str} {year_str}"
+        if key in combined_data:
+            combined_data[key]['applications'] = count
 
-    for row in monthly_dis_data:
-        month_number = row.month.month
-        month_str = months_ru[month_number - 1]
-        if month_str in combined_data:
-            combined_data[month_str]['disinfections'] = row.total
+    for date_obj, count in monthly_dis_data:
+        month_str = months_ru[date_obj.month - 1]
+        year_str = str(date_obj.year)
+        key = f"{month_str} {year_str}"
+        if key in combined_data:
+            combined_data[key]['disinfections'] = count
 
     return combined_data
 
