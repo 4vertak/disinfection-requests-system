@@ -1,6 +1,3 @@
-volumes:
-  postgres_data:
-  uwsgi_socket:
 services:
   postgres:
     image: postgres
@@ -18,7 +15,6 @@ services:
     container_name: flask
     volumes:
       - ~/.uploads/images/flask-yt:/app/app/static/upload
-      - uwsgi_socket:/tmp
     env_file:
       - .env
     environment:
@@ -40,7 +36,5 @@ services:
       - .env
     depends_on:
       - flask
-    volumes:
-      - uwsgi_socket:/tmp
     ports:
       - "8081:80"
