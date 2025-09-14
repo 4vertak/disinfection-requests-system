@@ -24,7 +24,7 @@ class ApplicationForm(FlaskForm):
     hospitalization_date = DateField(
         'Дата госпитализации', format='%Y-%m-%d', validators=[Optional()])
     gdu = SelectField('Группа диспансерного наблюдения', choices=[(
-        '0', '0'), ('I-А-МБТ+', 'I-А-МБТ+'), ('I-А-МБТ-', 'I-А-МБТ-'), ('I-В', 'I-В'), ('II-А', 'II-Б'), ('III', 'III'), ('III-А', 'III'),('IV-А', 'IV-А'), ('IV-Б', 'IV-Б'), ('V', 'V') , ('VI', 'VI')], validators=[DataRequired()])
+        '0', '0'), ('I-А-МБТ+', 'I-А-МБТ+'), ('I-Б-МБТ+', 'I-Б-МБТ+'), ('I-К-МБТ+', 'I-К-МБТ+'), ('I-К-МБТ-', 'I-К-МБТ-'), ('II-А-МБТ+', 'II-А-МБТ+'), ('II-А-МБТ-', 'II-А-МБТ-'), ('II-Б-МБТ+', 'II-Б-МБТ+'), ('III', 'III'), ('IV', 'IV'), ('V', 'V') , ('VI', 'VI')], validators=[DataRequired()])
     registration_date = DateField(
         'Дата взятия на учет', format='%Y-%m-%d', validators=[DataRequired()])
     place_of_hospitalization = StringField(

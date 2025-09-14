@@ -128,6 +128,26 @@ def log_application_update(mapper, connection, target):
     #         old_data=target.to_dict()
     #     )
     #     db.session.add(audit_log)
+    
+    
+    # --- Справочники ---
+class Area(db.Model):
+    __tablename__ = 'area'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name_area = db.Column(db.String(50), unique=True, nullable=False)
+
+    doctors = db.relationship('Doctor', backref='area', lazy=True)
+
+
+class Doctor(db.Model):
+    """
+    Справочник врачей участка (ФИО и привязка к Area)
+    """
+    __tablename__ = 'doctor'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=False)
+
 
 
 

@@ -4,7 +4,7 @@ from flask_login import UserMixin
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = Doctor.query.get(int(user_id))
+    user = DoctorUser.query.get(int(user_id))
     if user:
         return user
     user = Disinfector.query.get(int(user_id))
@@ -35,8 +35,8 @@ class UserIDCounter(db.Model):
 class BaseUser(db.Model, UserMixin):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=False, nullable=False)
-    login = db.Column(db.String(50), unique=False, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    login = db.Column(db.String(50), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     user_type = db.Column(db.String(50), nullable=False, default='disinfector')
 
@@ -45,25 +45,20 @@ class BaseUser(db.Model, UserMixin):
         self.id = get_next_user_id()
 
 
-class Doctor(BaseUser):
-    __tablename__ = 'doctor'
-    area_id = db.Column(db.Integer, db.ForeignKey('area.id'))
-    application = db.relationship('Application', backref='doctor', lazy=True)
+# --- Пользователи системы ---
+class DoctorUser(BaseUser):
+    __tablename__ = 'doctor_user'
+    # здесь врач как пользователь системы
+    # не зависит от Area и справочника врачей
+    application = db.relationship('Application', backref='doctor_user', lazy=True)
 
 
 class Disinfector(BaseUser):
     __tablename__ = 'disinfector'
-    application = db.relationship(
-        'Disinfection', backref='disinfector', lazy=True)
+    application = db.relationship('Disinfection', backref='disinfector', lazy=True)
 
 
 class Administrator(BaseUser):
     __tablename__ = 'administrator'
 
 
-class Area(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name_area = db.Column(db.String(50), unique=True, nullable=False)
-    applications = db.relationship('Doctor', backref='area', lazy=True)
-    
-    
