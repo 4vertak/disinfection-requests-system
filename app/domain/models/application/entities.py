@@ -12,7 +12,7 @@ class Area(db.Model):
     __tablename__ = 'area'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name_area = db.Column(db.String(50), unique=True, nullable=False)
-
+    # applications = db.relationship('Doctor', backref='area', lazy=True) может иимет смысл оставить пока не поередлили какя связь будет одностороней или двусторонней
     doctors = db.relationship('Doctor', back_populates='area', lazy=True)
 
 
