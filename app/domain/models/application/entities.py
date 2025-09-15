@@ -24,7 +24,7 @@ class Doctor(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     full_name = db.Column(db.String(100), unique=True, nullable=False)
     area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=False)
-
+    # application = db.relationship('Application', backref='doctor', lazy=True) здесть тот же вопрос
     area = db.relationship('Area', back_populates='doctors')
     applications = db.relationship("Application", back_populates="doctor")
 
