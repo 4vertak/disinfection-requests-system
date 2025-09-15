@@ -54,11 +54,6 @@ class Application(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     submission_date = db.Column(db.DateTime, server_default=db.func.now())
-
-    # связь с пользователем (кто подал заявку)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    user = db.relationship("User", back_populates="applications")
-
     patient_full_name = db.Column(db.String(255), nullable=False)
     birth_date = db.Column(db.Date, nullable=False)
     address = db.Column(db.String(255), nullable=False)
@@ -74,7 +69,11 @@ class Application(db.Model):
 
     reason_application = db.Column(db.String(255), nullable=False, default='hospitalization')
     status = db.Column(db.String(20), default='incompleted', nullable=False)
-
+    
+    # ОСНОВНЫЕ ИЗМЕНЕНИЯ
+    # связь с пользователем (кто подал заявку)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user = db.relationship("User", back_populates="applications")
     # связь со справочником врачей
     doctor_id = db.Column(db.Integer, db.ForeignKey("doctor.id"), nullable=True)
     doctor = db.relationship("Doctor", back_populates="applications")
@@ -128,7 +127,7 @@ class Disinfection(db.Model):
     area_size = db.Column(db.Float)
     volume_size = db.Column(db.Float)
     spraying_time = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('disinfector.id', ondelete='SET NULL'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
 
     application = relationship('Application', back_populates='disinfection')
 
