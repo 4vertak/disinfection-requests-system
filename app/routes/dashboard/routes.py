@@ -13,8 +13,8 @@ from ...utils.get_total_info import get_total_info
 
 from ...utils.functions import combine_areas_data, combine_monthly_data, get_monthly_data_logs, get_areas_data_applicates, get_areas_data_disinfection, get_focus_data, get_monthly_data, initialize_combined_focus_areas_data, prepare_areas_labels_and_values, prepare_data_for_chart, prepare_labels_and_values, get_top_disinfectors
 
-from ...domain.models.user.entities import Doctor, Disinfector, Administrator, Area
-from ...domain.models.application.entities import Application, Disinfection, EpidemicFocus
+from ...domain.models.user.entities import User 
+from ...domain.models.application.entities import Application, Disinfection, EpidemicFocus, Area, Doctor
 from ...domain.models.audit.entities import ApplicationAuditLog
 from ...core.extensions import db
 from flask_login import login_required, current_user
@@ -25,6 +25,70 @@ from datetime import date, datetime, time
 
 dashboard = Blueprint('dashboard', __name__)
 
+@dashboard.route('/admin', methods=['POST', 'GET'])
+@login_required
+def admin():
+
+    if not hasattr(current_user, 'role') or current_user.role != 'admin':
+        abort(403)
+
+    count_admins = User.query.filter_by(role="Admin").count()
+    count_doctors = User.query.filter_by(role="Doctor").count()
+    count_disinfectors = User.query.filter_by(role="Disinfector").count()
+    total_users = count_doctors + count_disinfectors + count_admins
+    total_applications = Application.query.count()
+    total_changes = ApplicationAuditLog.query.count()
+
+    year = datetime.now().year
+    period = request.args.get('period', default='год')
+
+    start_date, end_date = get_period_dates(period, year)
+
+    monthly_data_changes = get_monthly_data_logs(
+        ApplicationAuditLog, 'change_time', start_date, end_date)
+
+    audit_logs = (
+        db.session.query(
+            ApplicationAuditLog,
+            User.username.label("username"),
+            User.role.label("role"),
+        )
+        .outerjoin(User, User.id == ApplicationAuditLog.changed_by)
+        .order_by(ApplicationAuditLog.change_time.desc())
+        .all()
+    )
+    
+    
+    months = list(monthly_data_changes.keys())
+    insert_data = [monthly_data_changes[month]['INSERT'] for month in months]
+    update_data = [monthly_data_changes[month]['UPDATE'] for month in months]
+    delete_data = [monthly_data_changes[month]['DELETE'] for month in months]
+
+    total_info = {
+        'total_users': total_users,
+        'count_admins': count_admins,
+        'count_doctors': count_doctors,
+        'count_disinfectors': count_disinfectors,
+        'total_applications': total_applications,
+        'total_changes': total_changes
+    }
+    
+    query_apllications = (db.session.query(Application, Disinfection, Area, Doctor).join(Disinfection, Disinfection.application_id == Application.id).join(Doctor, Doctor.id == Application.user_id).join(Area, Area.id == Doctor.area_id))
+
+    applications = query_apllications.order_by(Application.submission_date.asc()).all()
+
+    return render_template(
+        'application/admin.html',
+        total_info=total_info,
+        monthly_data_changes=monthly_data_changes,
+        months=months,
+        insert_data=insert_data,
+        update_data=update_data,
+        delete_data=delete_data,
+        period=period,
+        audit_logs=audit_logs,
+        applications = applications
+    )
 
 
 
@@ -132,32 +196,36 @@ def generate_word_report():
         all_areas = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'ДПДО', 'РПТД']
         epidemic_groups = ['I', 'II', 'III', 'IV', 'V', 'безадресные']
 
-        query = db.session.query(
-            EpidemicFocus.name.label('epidemic_focus'),
-            Area.name_area.label('area'),
-            func.count(Application.id).label('count')
-        ).join(Application, Application.focus_id == EpidemicFocus.id)\
-         .outerjoin(Doctor, Doctor.id == Application.user_id)\
-         .outerjoin(Area, Area.id == Doctor.area_id)\
-         .filter(Application.submission_date >= start_date,
-                 Application.submission_date <= end_date_with_time)\
-         .filter(Area.name_area.in_(all_areas))\
-         .group_by(EpidemicFocus.name, Area.name_area)
+        query = (
+            db.session.query(
+                EpidemicFocus.name.label("epidemic_focus"),
+                Area.name_area.label("area"),
+                func.count(Application.id).label("count"),
+            )
+            .join(Application, Application.focus_id == EpidemicFocus.id)
+            .outerjoin(Doctor, Doctor.id == Application.doctor_id)
+            .outerjoin(Area, Area.id == Doctor.area_id)
+            .filter(Application.submission_date.between(start_date, end_date))
+            .filter(Area.name_area.in_(all_areas))
+            .group_by(EpidemicFocus.name, Area.name_area)
+        )
         
         results = query.all()
         
-        posthumous_query = db.session.query(
-            EpidemicFocus.name.label('epidemic_focus'),
-            Area.name_area.label('area'),
-            func.count(Application.id).label('posthumous_count')
-        ).join(Application, Application.focus_id == EpidemicFocus.id)\
-         .outerjoin(Doctor, Doctor.id == Application.user_id)\
-         .outerjoin(Area, Area.id == Doctor.area_id)\
-         .filter(Application.submission_date >= start_date,
-                 Application.submission_date <= end_date_with_time)\
-         .filter(Application.reason_application == 'posthumously')\
-         .filter(Area.name_area.in_(all_areas))\
-         .group_by(EpidemicFocus.name, Area.name_area)
+        posthumous_query = (
+            db.session.query(
+                EpidemicFocus.name.label("epidemic_focus"),
+                Area.name_area.label("area"),
+                func.count(Application.id).label("posthumous_count"),
+            )
+            .join(Application, Application.focus_id == EpidemicFocus.id)
+            .outerjoin(Doctor, Doctor.id == Application.doctor_id)
+            .outerjoin(Area, Area.id == Doctor.area_id)
+            .filter(Application.submission_date.between(start_date, end_date))
+            .filter(Application.reason_application == "posthumously")
+            .filter(Area.name_area.in_(all_areas))
+            .group_by(EpidemicFocus.name, Area.name_area)
+        )
         
         posthumous_results = posthumous_query.all()
 
@@ -283,71 +351,3 @@ def generate_word_report():
         current_app.logger.error(f"Error generating report: {str(e)}", exc_info=True)
         flash('Произошла ошибка при генерации отчета', 'danger')
         return redirect(url_for('dashboard.all'))
-
-@dashboard.route('/admin', methods=['POST', 'GET'])
-@login_required
-def admin():
-
-    if not hasattr(current_user, 'user_type') or current_user.user_type != 'admin':
-        abort(403)
-
-    count_admins = Administrator.query.count()
-    count_doctors = Doctor.query.count()
-    count_disinfectors = Disinfector.query.count()
-    total_users = count_doctors + count_disinfectors + count_admins
-    total_applications = Application.query.count()
-    total_changes = ApplicationAuditLog.query.count()
-
-    year = datetime.now().year
-    period = request.args.get('period', default='год')
-
-    start_date, end_date = get_period_dates(period, year)
-
-    monthly_data_changes = get_monthly_data_logs(
-        ApplicationAuditLog, 'change_time', start_date, end_date)
-
-    audit_logs = (
-        db.session.query(
-            ApplicationAuditLog,
-            Doctor.login.label('doctor_login'),
-            Disinfector.login.label('disinfector_login'),
-            Administrator.login.label('admin_login')
-        )
-        .outerjoin(Doctor, Doctor.id == ApplicationAuditLog.changed_by)
-        .outerjoin(Disinfector, Disinfector.id == ApplicationAuditLog.changed_by)
-        .outerjoin(Administrator, Administrator.id == ApplicationAuditLog.changed_by)
-        .order_by(ApplicationAuditLog.change_time.desc())
-        .all()
-    )
-    
-    
-    months = list(monthly_data_changes.keys())
-    insert_data = [monthly_data_changes[month]['INSERT'] for month in months]
-    update_data = [monthly_data_changes[month]['UPDATE'] for month in months]
-    delete_data = [monthly_data_changes[month]['DELETE'] for month in months]
-
-    total_info = {
-        'total_users': total_users,
-        'count_admins': count_admins,
-        'count_doctors': count_doctors,
-        'count_disinfectors': count_disinfectors,
-        'total_applications': total_applications,
-        'total_changes': total_changes
-    }
-    
-    query_apllications = (db.session.query(Application, Disinfection, Area, Doctor).join(Disinfection, Disinfection.application_id == Application.id).join(Doctor, Doctor.id == Application.user_id).join(Area, Area.id == Doctor.area_id))
-
-    applications = query_apllications.order_by(Application.submission_date.asc()).all()
-
-    return render_template(
-        'application/admin.html',
-        total_info=total_info,
-        monthly_data_changes=monthly_data_changes,
-        months=months,
-        insert_data=insert_data,
-        update_data=update_data,
-        delete_data=delete_data,
-        period=period,
-        audit_logs=audit_logs,
-        applications = applications
-    )

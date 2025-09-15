@@ -24,3 +24,4 @@ def register_signals(app):
         )
         db.session.add(log)
         db.session.commit()
+        

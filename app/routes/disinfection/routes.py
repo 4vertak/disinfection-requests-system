@@ -1,10 +1,11 @@
 from flask import Blueprint, abort, render_template, redirect, url_for, flash
 
-from ...domain.models.user.entities import Disinfector
+from ...domain.models.user.entities import User
 from .forms import DisinfectionForm
 from ...domain.models.application.entities import Application, Disinfection
 from ...core.extensions import db
 from flask_login import current_user, login_required
+
 
 disinfection = Blueprint('disinfection', __name__)
 
@@ -19,13 +20,20 @@ def add_data(id):
         return redirect(url_for('application.all'))
 
     disinfection = db.session.query(Disinfection).filter(
-        Disinfection.application_id == id).one_or_none()
+        Disinfection.application_id == id
+    ).one_or_none()
 
-    if isinstance(current_user, Disinfector):
+    form = None   # <-- добавили сюда
+
+    if current_user.role == "Doctor":
+        if disinfection is None:
+            disinfection = Disinfection(application_id=id)
+            db.session.add(disinfection)
+
         disinfection.rejection_reason = None
-        form = DisinfectionForm(obj=disinfection)
+        form = DisinfectionForm(obj=disinfection)   # теперь точно будет
         form.disinfection_date.data = application.submission_date
-        
+
         if form.validate_on_submit():
             disinfection.disinfection_date = form.disinfection_date.data
             disinfection.area_size = form.area_size.data
@@ -44,11 +52,11 @@ def add_data(id):
                 db.session.commit()
                 flash('Данные о дезинфекции успешно добавлены!', 'success')
                 return redirect(url_for('application.all'))
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
-                flash(
-                    'Произошла ошибка при добавлении записи. Пожалуйста, попробуйте еще раз.', 'error')
+                flash('Произошла ошибка при добавлении записи. Попробуйте ещё раз.', 'error')
     else:
         abort(403)
 
     return render_template('application/add_data.html', application=application, form=form)
+

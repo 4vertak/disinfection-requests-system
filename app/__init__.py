@@ -41,7 +41,7 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
-        UserInitializer.initialize_user_id_counter()
+        # UserInitializer.initialize_user_id_counter()
         UserInitializer.create_admin_account()
         UserInitializer.fill_directories()
 

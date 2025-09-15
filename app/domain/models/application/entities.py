@@ -8,25 +8,57 @@ from sqlalchemy import event
 from ....core.extensions import db
 
 
+class Area(db.Model):
+    __tablename__ = 'area'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name_area = db.Column(db.String(50), unique=True, nullable=False)
+
+    doctors = db.relationship('Doctor', back_populates='area', lazy=True)
+
+
+class Doctor(db.Model):
+    """
+    Справочник врачей участка (ФИО и привязка к Area)
+    """
+    __tablename__ = 'doctor'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    full_name = db.Column(db.String(100), unique=True, nullable=False)
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=False)
+
+    area = db.relationship('Area', back_populates='doctors')
+    applications = db.relationship("Application", back_populates="doctor")
+
+
 class Diagnosis(db.Model):
+    __tablename__ = 'diagnosis'
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     mkb_code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    applications = db.relationship(
-        'Application', backref='diagnosis', lazy=True)
+
+    applications = db.relationship('Application', backref='diagnosis', lazy=True)
+
 
 class EpidemicFocus(db.Model):
+    __tablename__ = 'epidemic_focus'
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
-    applications = db.relationship(
-        'Application', backref='epidemic_focus', lazy=True)
+
+    applications = db.relationship('Application', backref='epidemic_focus', lazy=True)
+
 
 
 class Application(db.Model):
     __tablename__ = 'application'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    submission_date = db.Column(db.DateTime, default=datetime.now)
+    submission_date = db.Column(db.DateTime, server_default=db.func.now())
+
+    # связь с пользователем (кто подал заявку)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user = db.relationship("User", back_populates="applications")
+
     patient_full_name = db.Column(db.String(255), nullable=False)
     birth_date = db.Column(db.Date, nullable=False)
     address = db.Column(db.String(255), nullable=False)
@@ -35,25 +67,32 @@ class Application(db.Model):
     workplace = db.Column(db.String(255))
     position = db.Column(db.String(100))
     registration_date = db.Column(db.Date)
+
     diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.id'))
     gdu = db.Column(db.String(20))
     focus_id = db.Column(db.Integer, db.ForeignKey('epidemic_focus.id'))
-    reason_application = db.Column(
-        db.String(255), nullable=False, default='hospitalization')
+
+    reason_application = db.Column(db.String(255), nullable=False, default='hospitalization')
     status = db.Column(db.String(20), default='incompleted', nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey(
-        'doctor.id', ondelete='SET NULL'), nullable=True)
+
+    # связь со справочником врачей
+    doctor_id = db.Column(db.Integer, db.ForeignKey("doctor.id"), nullable=True)
+    doctor = db.relationship("Doctor", back_populates="applications")
+
+    # вводимые пользователем данные о враче (история + возможность добавления в справочник)
+    doctor_full_name = db.Column(db.String(255), nullable=True)
+    doctor_area = db.Column(db.String(255), nullable=True)
+
     hospitalization_date = db.Column(db.Date, nullable=True)
-    place_of_hospitalization = db.Column(
-        db.String(255), nullable=True)
+    place_of_hospitalization = db.Column(db.String(255), nullable=True)
 
     disinfection = relationship(
-        'Disinfection', back_populates='application', cascade='all, delete-orphan')
+        'Disinfection', back_populates='application', cascade='all, delete-orphan'
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        new_disinfection = Disinfection(
-            application=self)
+        new_disinfection = Disinfection(application=self)
         self.disinfection.append(new_disinfection)
 
     def to_dict(self):
@@ -79,22 +118,20 @@ class Application(db.Model):
         }
         return json.loads(json.dumps(data, ensure_ascii=False, default=json_serializer))
 
-
 class Disinfection(db.Model):
     __tablename__ = 'disinfection'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    application_id = db.Column(db.Integer, db.ForeignKey(
-        'application.id'), nullable=False)
+    application_id = db.Column(db.Integer, db.ForeignKey('application.id'), nullable=False)
     rejection_reason = db.Column(db.String(255))
     disinfection_date = db.Column(db.DateTime)
     area_size = db.Column(db.Float)
     volume_size = db.Column(db.Float)
     spraying_time = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey(
-        'disinfector.id', ondelete='SET NULL'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('disinfector.id', ondelete='SET NULL'), nullable=True)
 
     application = relationship('Application', back_populates='disinfection')
+
 
 
 @event.listens_for(Application, 'after_insert')
@@ -116,37 +153,8 @@ def log_application_update(mapper, connection, target):
     else:  
         audit_log.changed_by = 104
     db.session.add(audit_log)
-        
-    
-    
-    # @event.listens_for(Application, 'after_delete')
-    # def log_application_delete(mapper, connection, target):
-    #     audit_log = ApplicationAuditLog(
-    #         application_id=target.id,
-    #         changed_by=target.user_id,
-    #         change_type='DELETE',
-    #         old_data=target.to_dict()
-    #     )
-    #     db.session.add(audit_log)
-    
-    
-    # --- Справочники ---
-class Area(db.Model):
-    __tablename__ = 'area'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name_area = db.Column(db.String(50), unique=True, nullable=False)
-
-    doctors = db.relationship('Doctor', backref='area', lazy=True)
 
 
-class Doctor(db.Model):
-    """
-    Справочник врачей участка (ФИО и привязка к Area)
-    """
-    __tablename__ = 'doctor'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=False)
 
 
 

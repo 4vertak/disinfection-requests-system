@@ -169,6 +169,24 @@
             {% endif %}
           </div>
         </div>
+        <div class="row mb-4">
+          <div class="col-xs-12 col-sm-6 col-md-6">
+            <label for="doctor_id" class="form-label text-uppercase">Выберите врача:</label>
+            {{ form.doctor_id(class="form-select", id="doctor_id", onchange="toggleDoctorFields()") }}
+          </div>
+        </div>
+
+        <div class="row mb-4" id="newDoctorFields" style="display: none;">
+          <div class="col-xs-12 col-sm-6 col-md-6">
+            <label for="doctor_full_name" class="form-label text-uppercase">ФИО врача:</label>
+            {{ form.doctor_full_name(class="form-control", id="doctor_full_name", placeholder="Введите ФИО врача") }}
+          </div>
+          <div class="col-xs-12 col-sm-6 col-md-6">
+            <label for="doctor_dispensary_area" class="form-label text-uppercase">Диспансерный участок:</label>
+            {{ form.doctor_dispensary_area(class="form-control", id="doctor_dispensary_area", placeholder="Введите участок") }}
+          </div>
+        </div>
+
         <input
           type="submit"
           class="btn btn-primary rounded-pill w-100 mb-4"
@@ -183,4 +201,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/i18n/ru.js"></script>
 {% assets 'application_create_js' %}
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+<script>
+  function toggleReasonField() {
+    let reason = document.getElementById("reason_application").value;
+    document.getElementById("dateField").style.display = (reason === "hospitalization") ? "block" : "none";
+    document.getElementById("placeFeald").style.display = (reason === "hospitalization") ? "block" : "none";
+  }
+
+  function toggleDoctorFields() {
+    let doctorSelect = document.getElementById("doctor_id");
+    let newDoctorFields = document.getElementById("newDoctorFields");
+    if (doctorSelect.value === "0") {
+      newDoctorFields.style.display = "flex";
+    } else {
+      newDoctorFields.style.display = "none";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    toggleReasonField();
+    toggleDoctorFields();
+  });
+</script>
 {% endassets %}{% endblock %}

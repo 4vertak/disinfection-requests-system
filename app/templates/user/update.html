@@ -1,8 +1,11 @@
-{% extends "main/base.html" %} {% block title %}Регистрация{% endblock %} {%
-block style %}{% assets 'user_update_css' %}<link
-  rel="stylesheet"
-  href="{{ ASSET_URL }}"
-/>{% endassets %}{% endblock %} {% block content %}
+{% extends "main/base.html" %}
+{% block title %}Профиль{% endblock %}
+{% block style %}
+{% assets 'user_update_css' %}
+<link rel="stylesheet" href="{{ ASSET_URL }}" />
+{% endassets %}
+{% endblock %}
+{% block content %}
 <!-- Header -->
 <div class="container py-4 py-md-5 py-xl-6 mb-sm-4 mb-xxl-5">
   <div class="col-lg-8 text-center mx-auto">
@@ -19,90 +22,62 @@ block style %}{% assets 'user_update_css' %}<link
         {{ form.hidden_tag() }}
 
         <!-- Основные поля -->
-        <div class="mb-4">
-          <label for="name" class="form-label text-uppercase"
-            >Имя пользователя:</label
-          >
+        {% comment %} <div class="mb-4">
+          <label for="name" class="form-label text-uppercase">Имя пользователя:</label>
           {{ form.name(class="form-control", id="name") }}
-        </div>
+        </div> {% endcomment %}
 
         <div class="mb-4">
-          <label for="login" class="form-label text-uppercase">Логин:</label>
-          {{ form.login(class="form-control", id="login") }}
+          <label for="username" class="form-label text-uppercase">Логин:</label>
+          {{ form.username(class="form-control", id="username") }}
         </div>
 
         <!-- Поля для смены пароля -->
         <div class="mb-4">
           <div class="form-check">
-            {{ form.change_password(class="form-check-input",
-            id="change_password") }}
-            <label class="form-check-label" for="change_password"
-              >Изменить пароль</label
-            >
+            {{ form.change_password(class="form-check-input", id="change_password") }}
+            <label class="form-check-label" for="change_password">Изменить пароль</label>
           </div>
         </div>
 
         <div id="password_fields" style="display: none">
           <!-- Поле текущего пароля (отображается только для не-админов) -->
-          <div
-            class="mb-4 current-password-field"
-            {%
-            if
-            is_admin
-            %}style="display: none;"
-            {%
-            endif
-            %}
-          >
-            <label for="current_password" class="form-label text-uppercase"
-              >Текущий пароль:</label
-            >
-            {{ form.current_password(class="form-control",
-            id="current_password") }}
+          <div class="mb-4 current-password-field"
+               {% if is_admin %}style="display: none;"{% endif %}>
+            <label for="current_password" class="form-label text-uppercase">Текущий пароль:</label>
+            {{ form.current_password(class="form-control", id="current_password") }}
           </div>
 
-          <!-- Обязательные поля для нового пароля -->
+          <!-- Новые пароли -->
           <div class="mb-4">
-            <label for="new_password" class="form-label text-uppercase"
-              >Новый пароль:</label
-            >
+            <label for="new_password" class="form-label text-uppercase">Новый пароль:</label>
             {{ form.new_password(class="form-control", id="new_password") }}
-            <div class="form-text">
-              Длина пароля должна быть не менее 8 символов
-            </div>
+            <div class="form-text">Длина пароля должна быть не менее 8 символов</div>
           </div>
 
           <div class="mb-4">
-            <label for="confirm_new_password" class="form-label text-uppercase"
-              >Подтвердите новый пароль:</label
-            >
-            {{ form.confirm_new_password(class="form-control",
-            id="confirm_new_password") }}
+            <label for="confirm_new_password" class="form-label text-uppercase">Подтвердите новый пароль:</label>
+            {{ form.confirm_new_password(class="form-control", id="confirm_new_password") }}
           </div>
         </div>
 
-        <!-- Остальные поля формы -->
-        {% if current_user.user_type == 'doctor'%}
+        <!-- Остальные поля -->
+        {% if current_user.role == 'Doctor' %}
         <div class="mb-4" id="areaFieldforDoctor">
-          <label for="area_id" class="form-label text-uppercase"
-            >Участок:</label
-          >
+          <label for="area_id" class="form-label text-uppercase">Участок:</label>
           {{ form.area_id(class='form-control', id="area_id") }}
         </div>
-        {% endif%} {% if current_user.user_type == 'admin' and current_user.id
-        != user.id%}
+        {% endif %}
+
+        {% if current_user.role == 'Admin' and current_user.id != user.id %}
         <div class="mb-4">
-          <label for="user_type" class="form-label text-uppercase"
-            >Роль пользователя:</label
-          >
-          {{ form.user_type(class='form-control', id="user_type",
-          onchange="toggleAreaField()") }}
+          <label for="role" class="form-label text-uppercase">Роль пользователя:</label>
+          {{ form.role(class='form-control', id="role", onchange="toggleAreaField()") }}
         </div>
-        {% endif%}
+        {% endif %}
+
         <div class="mb-4" id="areaField" style="display: none">
-          <label for="area_id" class="form-label text-uppercase"
-            >Участок:</label
-          >
+          <label for="area_id" class="form-label text-uppercase">Участок:</label>
           {{ form.area_id(class='form-control', id="area_id") }}
         </div>
 
@@ -111,7 +86,10 @@ block style %}{% assets 'user_update_css' %}<link
     </div>
   </div>
 </div>
-
-{% endblock %} {% block script %}{% assets 'user_update_js' %}
+{% endblock %}
+{% block script %}
+{% assets 'user_update_js' %}
 <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{% endassets %}{% endblock %}
+{% endassets %}
+{% endblock %}
+

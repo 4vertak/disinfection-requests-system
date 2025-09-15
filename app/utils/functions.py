@@ -8,9 +8,9 @@ from PIL import Image
 from flask import current_app
 from sqlalchemy import func
 
-from ..domain.models.user.entities import Area, Doctor, Disinfector
+from ..domain.models.user.entities import User
 
-from ..domain.models.application.entities import Application, Disinfection, EpidemicFocus
+from ..domain.models.application.entities import Application, Disinfection, EpidemicFocus, Doctor, Area
 
 from ..core.extensions import db
 
@@ -241,15 +241,16 @@ def prepare_data_for_chart(focus_total_values, focus_labels):
 
 def get_top_disinfectors(start_date, end_date):
     query = db.session.query(
-        Disinfector.id,
-        Disinfector.name,
-        func.count(Disinfection.id).label('disinfection_count'),
-        func.coalesce(func.sum(Disinfection.area_size), 0).label('total_area')
-    ).join(Disinfection, Disinfector.id == Disinfection.user_id)
-    
+        User.id,
+        User.username.label("name"),
+        func.count(Disinfection.id).label("disinfection_count"),
+        func.coalesce(func.sum(Disinfection.area_size), 0).label("total_area")
+    ).join(Disinfection, User.id == Disinfection.user_id)\
+     .filter(User.role == "Disinfector")
+
     if start_date and end_date:
         query = query.filter(Disinfection.disinfection_date.between(start_date, end_date))
-    
-    return query.group_by(Disinfector.id, Disinfector.name)\
-               .order_by(func.count(Disinfection.id).desc())\
-               .all()
+
+    return (query.group_by(User.id, User.username)
+                 .order_by(func.count(Disinfection.id).desc())
+                 .all())
