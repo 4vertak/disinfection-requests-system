@@ -72,7 +72,7 @@ class Application(db.Model):
     
     # ОСНОВНЫЕ ИЗМЕНЕНИЯ
     # связь с пользователем (кто подал заявку)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="applications")
     # связь со справочником врачей
     doctor_id = db.Column(db.Integer, db.ForeignKey("doctor.id"), nullable=True)
@@ -127,7 +127,7 @@ class Disinfection(db.Model):
     area_size = db.Column(db.Float)
     volume_size = db.Column(db.Float)
     spraying_time = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
 
     application = relationship('Application', back_populates='disinfection')
 
