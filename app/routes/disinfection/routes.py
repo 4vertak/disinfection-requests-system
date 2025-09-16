@@ -23,9 +23,9 @@ def add_data(id):
         Disinfection.application_id == id
     ).one_or_none()
 
-    form = None   # <-- добавили сюда
+    form = None   # <-- добавил сюда
 
-    if current_user.role == "Doctor":
+    if current_user.user_type == "doctor":
         if disinfection is None:
             disinfection = Disinfection(application_id=id)
             db.session.add(disinfection)
