@@ -19,12 +19,14 @@ block style %}{% assets 'user_login_css' %}<link
       <form method="post">
         {{ form.hidden_tag() }}
         <div class="mb-4">
-          <label for="username" class="form-label text-uppercase">Логин</label>
-          {{ form.username(class="form-control", id="username", placeholder="Логин") }}
+          <label for="login" class="form-label text-uppercase">Логин</label>
+          {{ form.login(class="form-control", id="login", placeholder="login")
+          }}
         </div>
         <div class="mb-4">
           <label for="password" class="form-label text-uppercase">Пароль</label>
-          {{ form.password(class="form-control", id="password", placeholder="********") }}
+          {{ form.password(class="form-control", id="password",
+          placeholder="********") }}
           <div class="form-text" id="password-hint">
             Длина пароля должна быть не менее 8 символов
           </div>
@@ -33,19 +35,17 @@ block style %}{% assets 'user_login_css' %}<link
       </form>
       <div class="border border-1 mb-4"></div>
       <div class="d-flex justify-content-between">
-        <a href="{{ url_for('user.register') }}" class="link-secondary small">
-          Регистрация
-        </a>
-         <a href="{{ url_for('user.login') }}" class="link-secondary small"
-          >Забыли пароль?</a>
+        <a href="{{ url_for('user.register') }}" class="link-secondary small"
+          >Вы зарегистрированы?</a
+        >
+        <a href="{{ url_for('user.login') }}" class="link-secondary small"
+          >Забыли пароль?</a
+        >
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
-{% block script %}
-{% assets 'user_login_js' %}
-<script type="text/javascript" src="{{ ASSET_URL }}"></script>
-{% endassets %}
-{% endblock %}
 
+{% endblock %} {% block script %}{% assets 'user_login_js' %}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}{% endblock %}
