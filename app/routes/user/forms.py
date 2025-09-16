@@ -11,9 +11,8 @@ class RegistrationForm(FlaskForm):
         min=8, message='Пароль должен содержать минимум 8 символов.')])
     confirm_password = PasswordField('Подтвердите пароль', validators=[DataRequired(
         message='Подтверждение пароля обязательно'), EqualTo('password', message='Пароли не совпадают')])
-    user_type = SelectField('Тип пользователя', choices=[(
-        # 'doctor', 'Врач'), ('disinfector', 'Дезинфектор'), ('admin', 'Администратор')], default='disinfector')
-    area_id = SelectField('Участок', coerce=int, validators=[DataRequired()])
+    user_type = SelectField('Тип пользователя', choices=[('doctor', 'Врач'), ('disinfector', 'Дезинфектор'), ('admin', 'Администратор')], default='disinfector')
+    # area_id = SelectField('Участок', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Зарегистрироваться')
 
 class LoginUpdateForm(FlaskForm):
