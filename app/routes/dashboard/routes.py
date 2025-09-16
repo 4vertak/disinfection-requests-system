@@ -29,7 +29,7 @@ dashboard = Blueprint('dashboard', __name__)
 @login_required
 def admin():
 
-    if not hasattr(current_user, 'role') or current_user.role != 'admin':
+    if not hasattr(current_user, 'role') or current_user.role != 'Admin':
         abort(403)
 
     count_admins = User.query.filter_by(role="Admin").count()
