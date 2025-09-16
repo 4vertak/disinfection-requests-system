@@ -40,7 +40,7 @@ class LoginUpdateForm(FlaskForm):
         ('admin', 'Администратор')
     ], default='disinfector')
     
-    area_id = SelectField('Участок', coerce=int, validators=[DataRequired()])
+    # area_id = SelectField('Участок', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Обновить')
 
 
