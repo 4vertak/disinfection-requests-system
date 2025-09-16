@@ -29,12 +29,12 @@ dashboard = Blueprint('dashboard', __name__)
 @login_required
 def admin():
 
-    if not hasattr(current_user, 'role') or current_user.role != 'Admin':
+    if not hasattr(current_user, 'user_type') or current_user.user_type != 'admin':
         abort(403)
 
-    count_admins = User.query.filter_by(role="Admin").count()
-    count_doctors = User.query.filter_by(role="Doctor").count()
-    count_disinfectors = User.query.filter_by(role="Disinfector").count()
+    count_admins = User.query.filter_by(user_type="admin").count()
+    count_doctors = User.query.filter_by(user_type="doctor").count()
+    count_disinfectors = User.query.filter_by(user_type="disinfector").count()
     total_users = count_doctors + count_disinfectors + count_admins
     total_applications = Application.query.count()
     total_changes = ApplicationAuditLog.query.count()
@@ -50,8 +50,8 @@ def admin():
     audit_logs = (
         db.session.query(
             ApplicationAuditLog,
-            User.username.label("username"),
-            User.role.label("role"),
+            User.login.label("login"),
+            User.user_type.label("user_type"),
         )
         .outerjoin(User, User.id == ApplicationAuditLog.changed_by)
         .order_by(ApplicationAuditLog.change_time.desc())
