@@ -193,7 +193,7 @@ def delete_user(id):
 @user.route('/admin/users', methods=['POST', 'GET'])
 @login_required
 def users():
-    if current_user.role != "Admin":
+    if current_user.user_type != "admin":
         abort(403)
 
     users = User.query.all()
