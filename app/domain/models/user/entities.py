@@ -7,7 +7,7 @@ def load_user(user_id):
 
 
 class User(db.Model, UserMixin):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -16,5 +16,6 @@ class User(db.Model, UserMixin):
 
 
     applications = db.relationship("Application", back_populates="user")
+
 
 
