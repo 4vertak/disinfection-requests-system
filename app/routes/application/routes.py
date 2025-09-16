@@ -41,7 +41,7 @@ def all():
 @application.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
-    if current_user.role not in ("Doctor", "Admin"):
+    if current_user.user_type not in ("doctor", "admin"):
         abort(403)
 
     form = ApplicationForm()
@@ -66,7 +66,7 @@ def create():
 @application.route("/application/<int:id>/update", methods=["GET", "POST"])
 @login_required
 def update(id):
-    if current_user.role not in ("Doctor", "Admin"):
+    if current_user.user_type not in ("doctor", "admin"):
         abort(403)
 
     application = Application.query.get(id)
@@ -75,7 +75,7 @@ def update(id):
         flash("Заявка не найдена.", "danger")
         return redirect(url_for("application.all"))
 
-    if current_user.role == "Doctor" and application.user_id != current_user.id:
+    if current_user.user_type == "doctor" and application.user_id != current_user.id:
         flash("У вас нет прав для редактирования этой заявки.", "danger")
         return redirect(url_for("application.all"))
 
@@ -108,7 +108,7 @@ def update(id):
 @application.route("/application/<int:id>/delete", methods=["GET", "POST"])
 @login_required
 def delete_application(id):
-    if current_user.role not in ("Doctor", "Admin"):
+    if current_user.user_type not in ("doctor", "admin"):
         abort(403)
     try:
         ApplicationService.delete_application(id, current_user)
