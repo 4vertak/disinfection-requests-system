@@ -1,7 +1,7 @@
 
 from asyncio.log import logger
 
-from ...domain.models.application.entities import Application, Disinfection, Area
+from ...domain.models.application.entities import Application, Disinfection, Area, Doctor
 from ...domain.models.audit.entities import UserAuditLog
 from ...utils.serializers import json_serializer
 
@@ -25,12 +25,12 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(login=form.login.data).first()
 
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user)
             flash('Вы вошли в систему!', 'success')
-            if user.role == "Admin":
+            if user.user_type == "admin":
                 return redirect('/admin')
             return redirect('/all')
         else:
@@ -42,16 +42,17 @@ def login():
 @user.route('/register', methods=['GET', 'POST'])
 @login_required
 def register():
-    if current_user.role != "Admin":
+    if current_user.user_type != "admin":
         abort(403)
 
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
             user_data = {
-                'username': form.username.data,
+                'login': form.login.data,
+                'name': form.username.data,
                 'password': form.password.data,
-                'role': form.role.data,
+                'user_type': form.user_type.data,
             }
             UserService.create_user(user_data)
             flash('Регистрация прошла успешно!', 'success')
@@ -76,7 +77,7 @@ def update(id):
         flash('Пользователь не найден.', 'danger')
         return redirect(url_for('application.all'))
 
-    if not (current_user.id == user.id or current_user.role == "Admin"):
+    if not (current_user.id == user.id or current_user.user_type == "admin"):
         flash('У вас нет прав для редактирования этого профиля.', 'danger')
         return redirect(url_for('application.all'))
 
@@ -85,12 +86,13 @@ def update(id):
     if request.method == 'POST' and form.validate_on_submit():
         try:
             update_data = {
-                'username': form.username.data,
-                'role': form.role.data
+                'login': form.username.data,
+                'name': form.username.data,
+                'user_type': form.user_type.data
             }
 
             if form.change_password.data:
-                if current_user.role != "Admin":
+                if current_user.user_type != "admin":
                     if not check_password_hash(user.password_hash, form.current_password.data):
                         flash('Текущий пароль введен неверно', 'danger')
                         return render_template('user/update.html', form=form, user=user)
@@ -106,7 +108,7 @@ def update(id):
 
             UserService.update_user(user.id, update_data)
             flash('Профиль успешно обновлен!', 'success')
-            if current_user.role == 'Admin':
+            if current_user.user_type == 'admin':
                 return redirect('/admin/users')
             else:
                 return redirect(url_for('application.all'))
@@ -116,7 +118,7 @@ def update(id):
             flash(f'Ошибка при обновлении профиля: {str(e)}', 'danger')
             logger.error(f'Ошибка при обновлении профиля {id}: {str(e)}')
 
-    return render_template('user/update.html', form=form, user=user, is_admin=(current_user.role == "Admin"))
+    return render_template('user/update.html', form=form, user=user, is_admin=(current_user.user_type == "admin"))
 
 
 @user.route('/logout')
@@ -130,7 +132,7 @@ def logout():
 @user.route('/user/<int:id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_user(id):
-    if current_user.role != "Admin":
+    if current_user.user_type != "admin":
         abort(403)
 
     user = User.query.get(id)
@@ -148,15 +150,15 @@ def delete_user(id):
             transferred_disinfections = 0
             new_owner_id = None
 
-            if user.role == 'Doctor':
-                alternate = User.query.filter(User.role == "Doctor", User.id != user.id).first()
+            if user.user_type == 'doctor':
+                alternate = User.query.filter(User.user_type == "doctor", User.id != user.id).first()
                 if alternate:
                     new_owner_id = alternate.id
                     transferred_apps = Application.query.filter_by(user_id=id).update(
                         {'user_id': alternate.id}, synchronize_session=False
                     )
-            elif user.role == 'Disinfector':
-                alternate = User.query.filter(User.role == "Disinfector", User.id != user.id).first()
+            elif user.user_type == 'disinfector':
+                alternate = User.query.filter(User.user_type == "disinfector", User.id != user.id).first()
                 if alternate:
                     new_owner_id = alternate.id
                     transferred_disinfections = Disinfection.query.filter_by(user_id=id).update(
@@ -168,7 +170,7 @@ def delete_user(id):
                 action='delete_user',
                 details={
                     'deleted_user_id': id,
-                    'deleted_username': user.username,
+                    'deleted_login': user.login,
                     'transferred_applications': transferred_apps,
                     'transferred_disinfections': transferred_disinfections,
                     'new_owner_id': new_owner_id
@@ -197,13 +199,13 @@ def users():
     users = User.query.all()
     total_info = {
         'total_users': len(users),
-        'count_admins': sum(1 for u in users if u.role == "Admin"),
-        'count_doctors': sum(1 for u in users if u.role == "Doctor"),
-        'count_disinfectors': sum(1 for u in users if u.role == "Disinfector"),
+        'count_admins': sum(1 for u in users if u.user_type == "admin"),
+        'count_doctors': sum(1 for u in users if u.user_type == "doctor"),
+        'count_disinfectors': sum(1 for u in users if u.user_type == "disinfector"),
     }
 
     all_users = [
-        {'id': u.id, 'username': u.username, 'role': u.role}
+        {'id': u.id, 'login': u.login, 'user_type': u.user_type}
         for u in users
     ]
 
