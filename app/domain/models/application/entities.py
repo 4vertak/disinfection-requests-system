@@ -127,7 +127,7 @@ class Disinfection(db.Model):
     area_size = db.Column(db.Float)
     volume_size = db.Column(db.Float)
     spraying_time = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     application = relationship('Application', back_populates='disinfection')
 
