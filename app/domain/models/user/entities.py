@@ -10,12 +10,14 @@ class User(db.Model, UserMixin):
     __tablename__ = "user"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
+    login = db.Column(db.String(150), unique=True, nullable=False)
+    name = db.Column(db.String(100), unique=False, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), nullable=False)  # Doctor, Admin, Disinfector
+    user_type = db.Column(db.String(50), nullable=False)  # doctor, admin, disinfector
 
 
     applications = db.relationship("Application", back_populates="user")
+
 
 
 
