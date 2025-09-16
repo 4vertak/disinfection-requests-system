@@ -16,13 +16,14 @@ class UserInitializer:
         Создает учетную запись администратора по умолчанию
         если она не существует
         """
-        admin_exists = User.query.filter_by(username='admin').first()
+        admin_exists = User.query.filter_by(user_type='admin').first()
         if not admin_exists:
             try:
                 admin = User(
-                    username='admin',
+                    login='admin',
+                    name='admin',
                     password_hash=generate_password_hash('admin123'),
-                    role='Admin'
+                    user_type='admin'
                 )
                 db.session.add(admin)
                 db.session.commit()
@@ -87,18 +88,20 @@ class UserService:
         Создает нового пользователя
         Args:
             user_data (dict): {
-                "username": str,
+                "login": str,
+                "name": str,
                 "password": str,
-                "role": str (Admin, Doctor, Patient, Disinfector и т.п.)
+                "user_type": str (admin, doctor, disinfector и т.п.)
             }
         Returns:
             User
         """
         try:
             user = User(
-                username=user_data['username'],
+                login =user_data['login'],
+                name =user_data['name'],
                 password_hash=generate_password_hash(user_data['password']),
-                role=user_data['role']
+                user_type=user_data['user_type']
             )
             db.session.add(user)
             db.session.commit()
