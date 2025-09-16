@@ -47,16 +47,29 @@ def create():
     form = ApplicationForm()
     form.diagnosis_id.choices = [(d.id, d.name) for d in Diagnosis.query.all()]
     form.focus_id.choices = [(f.id, f.name) for f in EpidemicFocus.query.all()]
+    form.area_id.choices = [(f.id, f.name_area) for f in Area.query.all()]
     form.doctor_id.choices = [(0, "--- Новый врач ---")] + [
-        (d.id, f"{d.full_name} (участок {d.dispensary_area})") for d in Doctor.query.all()
+        (d.id, f"{d.full_name} (участок {d.area_id})") for d in Doctor.query.all()
     ] # type: ignore
-
     if form.validate_on_submit():
         try:
-            ApplicationService.create_application(form, current_user.id)
+            # Определяем doctor_obj
+            doctor_obj = None
+            if form.doctor_id.data == 0 and form.doctor_full_name.data:
+                doctor_obj = ApplicationService._get_or_create_doctor(
+                    form.doctor_full_name.data.strip(),
+                    form.area_id.data
+                )
+            elif form.doctor_id.data != 0:
+                doctor_obj = Doctor.query.get(form.doctor_id.data)
+
+            # Создаём заявку
+            ApplicationService.create_application(form, current_user, doctor_obj=doctor_obj)
+
             flash("Заявка успешно создана!", "success")
             return redirect(url_for("application.all"))
         except Exception as e:
+            db.session.rollback()
             flash(f"Ошибка при создании заявки: {str(e)}", "danger")
             logger.error(f"Ошибка при создании заявки: {str(e)}")
 
@@ -82,13 +95,23 @@ def update(id):
     form = ApplicationForm(obj=application)
     form.diagnosis_id.choices = [(d.id, d.name) for d in Diagnosis.query.all()]
     form.focus_id.choices = [(f.id, f.name) for f in EpidemicFocus.query.all()]
+    form.area_id.choices = [(f.id, f.name_area) for f in Area.query.all()]
     form.doctor_id.choices = [(0, "--- Новый врач ---")] + [
-        (d.id, f"{d.full_name} (участок {d.dispensary_area})") for d in Doctor.query.all()
+        (d.id, f"{d.full_name} (участок {d.area_id})") for d in Doctor.query.all()
     ] # type: ignore
 
     if request.method == "POST" and form.validate_on_submit():
         try:
-            ApplicationService.update_application(id, form, current_user.id)
+            doctor_obj = None
+            if form.doctor_id.data == 0 and form.doctor_full_name.data:
+                doctor_obj = ApplicationService._get_or_create_doctor(
+                    form.doctor_full_name.data.strip(),
+                    form.area_id.data
+                )
+            elif form.doctor_id.data != 0:
+                doctor_obj = Doctor.query.get(form.doctor_id.data)
+
+            ApplicationService.update_application(id, form, current_user, doctor_obj=doctor_obj)
             db.session.commit()
             flash("Заявка успешно обновлена!", "success")
             return redirect(url_for("application.all"))
@@ -136,10 +159,12 @@ def download_application(id):
 
 
 @application.route("/api/diagnoses")
+@login_required
 def api_diagnoses():
     return ApplicationApiService.get_diagnoses()
 
 
 @application.route("/api/gdu")
+@login_required
 def api_gdu():
     return ApplicationApiService.get_gdu_list()

@@ -6,7 +6,11 @@ import secrets
 from PIL import Image
 
 from flask import current_app
+from sqlalchemy.orm import aliased
 from sqlalchemy import func
+
+from collections import OrderedDict
+from datetime import datetime
 
 from ..domain.models.user.entities import User
 
@@ -46,6 +50,54 @@ def set_font_for_document(doc, font_name='Times New Roman', font_size=12):
         for run in paragraph.runs:
             run.font.name = font_name
             run.font.size = Pt(12)
+
+
+
+# 1. Генерация словаря с нулями для всех месяцев в периоде
+def get_month_list(start_date, end_date):
+    months = OrderedDict()
+    current = start_date.replace(day=1)
+    while current <= end_date:
+        months[current.strftime("%B")] = 0
+        # переход к следующему месяцу
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+    return months
+
+# 2. Получение данных по месяцам для конкретной модели
+def get_monthly_data_fixed(model, date_field, start_date, end_date):
+    monthly_counts = get_month_list(start_date, end_date)
+    
+    query = (
+        db.session.query(
+            func.extract('month', getattr(model, date_field)).label('month'),
+            func.count(model.id).label('count')
+        )
+        .filter(getattr(model, date_field).between(start_date, end_date))
+        .group_by('month')
+        .all()
+    )
+
+    for month_num, count in query:
+        month_name = datetime(1900, int(month_num), 1).strftime("%B")
+        monthly_counts[month_name] = count
+
+    return monthly_counts
+
+# 3. Объединение данных для двух типов заявок (например, поступившие и исполненные)
+def combine_monthly_data_fixed(applicates_data, disinfection_data, start_date, end_date):
+    combined = OrderedDict()
+    all_months = get_month_list(start_date, end_date).keys()
+    
+    for month in all_months:
+        combined[month] = {
+            'applications': applicates_data.get(month, 0),
+            'disinfections': disinfection_data.get(month, 0)
+        }
+    
+    return combined
 
 def get_monthly_data(model, date_field, start_date, end_date):
     end_date_with_time = datetime.combine(end_date, time.max)
@@ -148,25 +200,30 @@ def combine_monthly_data(monthly_app_data, monthly_dis_data, start_date, end_dat
     return combined_data
 
 
+
 def get_areas_data_applicates(start_date, end_date):
+    AppAlias = aliased(Application)
+
     return db.session.query(
         Area.name_area.label('area_name'),
-        func.count(Application.id).label('total')
-    ).join(Doctor, Doctor.area_id == Area.id)\
-     .join(Application, Application.user_id == Doctor.id)\
-     .filter(Application.submission_date.between(start_date, end_date))\
+        func.count(AppAlias.id).label('total')
+    ).join(AppAlias, AppAlias.area_id == Area.id)\
+     .join(Doctor, AppAlias.doctor_id == Doctor.id)\
+     .filter(AppAlias.submission_date.between(start_date, end_date))\
      .group_by(Area.name_area)\
      .order_by(Area.name_area)\
      .all()
 
 
 def get_areas_data_disinfection(start_date, end_date):
+    AppAlias = aliased(Application)
+
     return db.session.query(
         Area.name_area.label('area_name'),
         func.count(Disinfection.disinfection_date).label('total')
-    ).join(Doctor, Doctor.area_id == Area.id)\
-     .join(Application, Application.user_id == Doctor.id)\
-     .join(Disinfection, Disinfection.application_id == Application.id)\
+    ).join(AppAlias, AppAlias.area_id == Area.id)\
+     .join(Doctor, AppAlias.doctor_id == Doctor.id)\
+     .join(Disinfection, Disinfection.application_id == AppAlias.id)\
      .filter(Disinfection.disinfection_date.between(start_date, end_date))\
      .group_by(Area.name_area)\
      .order_by(Area.name_area)\
@@ -203,8 +260,8 @@ def get_focus_data(start_date, end_date):
         func.count(Application.id).label('total')
     ).join(Application, Application.focus_id == EpidemicFocus.id) \
      .join(Disinfection, Disinfection.application_id == Application.id) \
-     .join(Doctor, Doctor.id == Application.user_id) \
-     .join(Area, Area.id == Doctor.area_id) \
+     .join(Doctor, Doctor.id == Application.doctor_id) \
+     .join(Area, Area.id == Application.area_id) \
      .filter(Application.submission_date.between(start_date, end_date)) \
      .group_by(EpidemicFocus.name, Area.name_area) \
      .order_by(EpidemicFocus.name, Area.name_area).all()
@@ -242,15 +299,15 @@ def prepare_data_for_chart(focus_total_values, focus_labels):
 def get_top_disinfectors(start_date, end_date):
     query = db.session.query(
         User.id,
-        User.username.label("name"),
+        User.name.label("name"),
         func.count(Disinfection.id).label("disinfection_count"),
         func.coalesce(func.sum(Disinfection.area_size), 0).label("total_area")
-    ).join(Disinfection, User.id == Disinfection.user_id)\
-     .filter(User.role == "Disinfector")
+    ).join(User, User.id == Disinfection.user_id)\
+     .filter(User.user_type == "disinfector")
 
     if start_date and end_date:
         query = query.filter(Disinfection.disinfection_date.between(start_date, end_date))
 
-    return (query.group_by(User.id, User.username)
+    return (query.group_by(User.id, User.name)
                  .order_by(func.count(Disinfection.id).desc())
                  .all())

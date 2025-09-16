@@ -11,7 +11,7 @@ from sqlalchemy import func
 from ...utils.date_utils import get_period_dates
 from ...utils.get_total_info import get_total_info
 
-from ...utils.functions import combine_areas_data, combine_monthly_data, get_monthly_data_logs, get_areas_data_applicates, get_areas_data_disinfection, get_focus_data, get_monthly_data, initialize_combined_focus_areas_data, prepare_areas_labels_and_values, prepare_data_for_chart, prepare_labels_and_values, get_top_disinfectors
+from ...utils.functions import combine_areas_data, combine_monthly_data, combine_monthly_data_fixed, get_monthly_data_fixed, get_monthly_data_logs, get_areas_data_applicates, get_areas_data_disinfection, get_focus_data, get_monthly_data, initialize_combined_focus_areas_data, prepare_areas_labels_and_values, prepare_data_for_chart, prepare_labels_and_values, get_top_disinfectors
 
 from ...domain.models.user.entities import User 
 from ...domain.models.application.entities import Application, Disinfection, EpidemicFocus, Area, Doctor
@@ -104,10 +104,16 @@ def all():
     
     total_info = get_total_info(start_date, end_date)
 
-    monthly_data_applicates = get_monthly_data(Application, 'submission_date', start_date, end_date)
-    monthly_data_disinfection = get_monthly_data(Disinfection, 'disinfection_date', start_date, end_date)
+    # monthly_data_applicates = get_monthly_data(Application, 'submission_date', start_date, end_date)
+    # monthly_data_disinfection = get_monthly_data(Disinfection, 'disinfection_date', start_date, end_date)
 
-    combined_data = combine_monthly_data(monthly_data_applicates, monthly_data_disinfection, start_date, end_date)
+    # combined_data = combine_monthly_data(monthly_data_applicates, monthly_data_disinfection, start_date, end_date)
+    
+    monthly_data_applicates = get_monthly_data_fixed(Application, 'submission_date', start_date, end_date)
+    monthly_data_disinfection = get_monthly_data_fixed(Disinfection, 'disinfection_date', start_date, end_date)
+    combined_data = combine_monthly_data_fixed(monthly_data_applicates, monthly_data_disinfection, start_date, end_date)
+
+
 
     all_months = list(combined_data.keys())
     total_values_full = [data['applications'] for data in combined_data.values()]

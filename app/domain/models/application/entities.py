@@ -12,20 +12,21 @@ class Area(db.Model):
     __tablename__ = 'area'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name_area = db.Column(db.String(50), unique=True, nullable=False)
-    # applications = db.relationship('Doctor', backref='area', lazy=True) может иимет смысл оставить пока не поередлили какя связь будет одностороней или двусторонней
-    doctors = db.relationship('Doctor', back_populates='area', lazy=True)
 
+    # Связь с врачами и заявками
+    doctors = db.relationship('Doctor', back_populates='area', lazy=True)
+    applications = db.relationship('Application', back_populates='area', lazy=True)
 
 class Doctor(db.Model):
-    """
-    Справочник врачей участка (ФИО и привязка к Area)
-    """
     __tablename__ = 'doctor'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     full_name = db.Column(db.String(100), unique=True, nullable=False)
+    
+    # Связь с участком
     area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=False)
-    # application = db.relationship('Application', backref='doctor', lazy=True) здесть тот же вопрос
     area = db.relationship('Area', back_populates='doctors')
+
+    # Связь с заявками
     applications = db.relationship("Application", back_populates="doctor")
 
 
@@ -44,7 +45,6 @@ class EpidemicFocus(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
-
     applications = db.relationship('Application', backref='epidemic_focus', lazy=True)
 
 
@@ -74,13 +74,17 @@ class Application(db.Model):
     # связь с пользователем (кто подал заявку)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="applications")
-    # связь со справочником врачей
-    doctor_id = db.Column(db.Integer, db.ForeignKey("doctor.id"), nullable=True)
-    doctor = db.relationship("Doctor", back_populates="applications")
+    
+    # Врач (если есть в справочнике)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'), nullable=True)
+    doctor = db.relationship('Doctor', back_populates='applications')
 
-    # вводимые пользователем данные о враче (история + возможность добавления в справочник)
+    # Для нового врача (если его нет в справочнике)
     doctor_full_name = db.Column(db.String(255), nullable=True)
-    doctor_area = db.Column(db.String(255), nullable=True)
+
+    # Участок (берется из справочника, не изменяется)
+    area_id = db.Column(db.Integer, db.ForeignKey('area.id'), nullable=False)
+    area = db.relationship('Area', back_populates='applications')
 
     hospitalization_date = db.Column(db.Date, nullable=True)
     place_of_hospitalization = db.Column(db.String(255), nullable=True)
@@ -113,7 +117,10 @@ class Application(db.Model):
             'status': self.status,
             'user_id': self.user_id,
             'hospitalization_date': self.hospitalization_date,
-            'place_of_hospitalization': self.place_of_hospitalization
+            'place_of_hospitalization': self.place_of_hospitalization,
+            'doctor_id': self.doctor_id,
+            'doctor_full_name': self.doctor_full_name,
+            'area_id': self.area_id
         }
         return json.loads(json.dumps(data, ensure_ascii=False, default=json_serializer))
 

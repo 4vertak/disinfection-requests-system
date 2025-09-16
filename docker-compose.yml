@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres
-    container_name: postgres
+    container_name: ${POSTGRES_HOST}
     volumes:
       - ~/.pg/pg_data/flask-yt:/var/lib/postgresql/data
     env_file:

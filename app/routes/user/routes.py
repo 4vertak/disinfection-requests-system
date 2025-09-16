@@ -50,7 +50,7 @@ def register():
         try:
             user_data = {
                 'login': form.login.data,
-                'name': form.username.data,
+                'name': form.name.data,
                 'password': form.password.data,
                 'user_type': form.user_type.data,
             }
@@ -86,8 +86,8 @@ def update(id):
     if request.method == 'POST' and form.validate_on_submit():
         try:
             update_data = {
-                'login': form.username.data,
-                'name': form.username.data,
+                'login': form.login.data,
+                'name': form.name.data,
                 'user_type': form.user_type.data
             }
 

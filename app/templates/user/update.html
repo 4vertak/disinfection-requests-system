@@ -30,7 +30,16 @@ block style %}{% assets 'user_update_css' %}<link
           <label for="login" class="form-label text-uppercase">Логин:</label>
           {{ form.login(class="form-control", id="login") }}
         </div>
-
+ {% if current_user.user_type == 'admin' and current_user.id
+        != user.id%} 
+        <div class="mb-4">
+          <label for="user_type" class="form-label text-uppercase"
+            >Роль пользователя:</label
+          >
+          {{ form.user_type(class='form-control', id="user_type",
+          onchange="toggleAreaField()") }}
+        </div>
+ {% endif%} 
         <!-- Поля для смены пароля -->
         <div class="mb-4">
           <div class="form-check">
@@ -81,30 +90,8 @@ block style %}{% assets 'user_update_css' %}<link
           </div>
         </div>
 
-<!--         <!-- Остальные поля формы -->
-        {% if current_user.user_type == 'doctor'%}
-        <div class="mb-4" id="areaFieldforDoctor">
-          <label for="area_id" class="form-label text-uppercase"
-            >Участок:</label
-          >
-          {{ form.area_id(class='form-control', id="area_id") }}
-        </div>
-        {% endif%} {% if current_user.user_type == 'admin' and current_user.id
-        != user.id%} -->
-        <div class="mb-4">
-          <label for="user_type" class="form-label text-uppercase"
-            >Роль пользователя:</label
-          >
-          {{ form.user_type(class='form-control', id="user_type",
-          onchange="toggleAreaField()") }}
-        </div>
-<!--         {% endif%} -->
-        <div class="mb-4" id="areaField" style="display: none">
-          <label for="area_id" class="form-label text-uppercase"
-            >Участок:</label
-          >
-          {{ form.area_id(class='form-control', id="area_id") }}
-        </div>
+
+       
 
         {{ form.submit(class="btn btn-primary rounded-pill w-100 mb-4") }}
       </form>

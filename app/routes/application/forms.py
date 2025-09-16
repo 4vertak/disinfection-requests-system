@@ -12,7 +12,7 @@ class ApplicationForm(FlaskForm):
     relative_contact_phone = StringField("Контактный телефон родственника", validators=[Optional()])
     workplace = StringField("Место работы", validators=[Optional()])
     position = StringField("Должность", default="не работает", validators=[Optional()])
-    diagnosis_id = SelectField("Диагноз", validators=[Optional()])
+    diagnosis_id = SelectField("Диагноз", coerce=int, validators=[Optional()])
     focus_id = SelectField("Очаг", coerce=int, validators=[DataRequired()])
     reason_application = SelectField("Причина дезинфекции", choices=[("hospitalization", "Госпитализация"), ("sheduled", "Плановая"), ("posthumously", "Посмертно")], default="hospitalization", validators=[Optional()],)
     hospitalization_date = DateField("Дата госпитализации", format="%Y-%m-%d", validators=[Optional()])
@@ -36,9 +36,9 @@ class ApplicationForm(FlaskForm):
     registration_date = DateField("Дата взятия на учет", format="%Y-%m-%d", validators=[DataRequired()])
     place_of_hospitalization = StringField("Место госпитализации", validators=[Optional()])
 
-    doctor_id = SelectField("Выбрать врача", coerce=lambda v: int(v) if v else None, validators=[Optional()])
+    doctor_id = SelectField("Выбрать врача", coerce=int, validators=[Optional()])
     doctor_full_name = StringField("Ф.И.О. врача (если новый)", validators=[Optional()])
-    doctor_dispensary_area = StringField("Диспансерный участок (если новый)", validators=[Optional()])
+    area_id = SelectField("Диспансерный участок", coerce=int, validators=[DataRequired()])
 
 
 

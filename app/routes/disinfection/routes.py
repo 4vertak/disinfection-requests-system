@@ -25,7 +25,7 @@ def add_data(id):
 
     form = None   # <-- добавил сюда
 
-    if current_user.user_type == "doctor":
+    if current_user.user_type == "disinfector":
         if disinfection is None:
             disinfection = Disinfection(application_id=id)
             db.session.add(disinfection)
