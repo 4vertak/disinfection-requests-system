@@ -24,7 +24,7 @@
       <div class="navbar-nav my-3 my-lg-0 ms-auto">
         <!--<a class="nav-link px-lg-3" href="{{ url_for('user.login') }}">Войти</a>-->
         {% if current_user.is_authenticated and current_user.user_type ==
-        'Admin' %}
+        'admin' %}
         <a class="nav-link px-lg-3" href="{{ url_for('dashboard.admin') }}"
           >Главная</a
         >
@@ -34,8 +34,8 @@
           >Заявки</a
         >
         {% endif %} {% if current_user.is_authenticated and
-        (current_user.user_type == 'Doctor' or current_user.user_type ==
-        'Disinfector')%}
+        (current_user.user_type == 'doctor' or current_user.user_type ==
+        'disinfector')%}
         <a class="nav-link px-lg-3" href="{{ url_for('application.all') }}"
           >Главная</a
         ><a class="nav-link px-lg-3" href="{{ url_for('dashboard.all') }}"
@@ -57,7 +57,7 @@
         {% endif %}
       </div>
       {% if current_user.is_authenticated and current_user.user_type ==
-      'Doctor'%}
+      'doctor'%}
       <a
         class="btn btn-primary btn-sm rounded-pill ms-lg-3"
         href="{{ url_for('application.create') }}"
