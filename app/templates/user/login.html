@@ -1,11 +1,8 @@
-{% extends "main/base.html" %}
-{% block title %}Авторизация{% endblock %}
-{% block style %}
-{% assets 'user_login_css' %}
-<link rel="stylesheet" href="{{ ASSET_URL }}" />
-{% endassets %}
-{% endblock %}
-{% block content %}
+{% extends "main/base.html" %} {% block title %}Авторизация{% endblock %} {%
+block style %}{% assets 'user_login_css' %}<link
+  rel="stylesheet"
+  href="{{ ASSET_URL }}"
+/>{% endassets %}{% endblock %} {% block content %}
 <!-- Header -->
 <div class="container py-4 py-md-5 py-xl-6 mb-sm-4 mb-xxl-5">
   <div class="col-lg-8 text-center mx-auto">
