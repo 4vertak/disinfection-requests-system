@@ -45,7 +45,7 @@ def create():
         abort(403)
 
     form = ApplicationForm()
-    form.diagnosis_id.choices = [(d.id, d.name) for d in Diagnosis.query.all()]
+    form.diagnosis_id.choices = [(d.id, d.name) for d in Diagnosis.query.order_by(Diagnosis.id).all()]
     form.focus_id.choices = [(f.id, f.name) for f in EpidemicFocus.query.all()]
     form.area_id.choices = [(f.id, f.name_area) for f in Area.query.all()]
     form.doctor_id.choices = [(0, "--- Новый врач ---")] + [
