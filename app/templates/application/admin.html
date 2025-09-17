@@ -158,7 +158,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for log, doctor_login, disinfector_login, admin_login in audit_logs %}
+                    {% for log, login, in audit_logs %}
                     <tr>
                       <td style="text-align: center">{{ loop.index }}</td>
                       <td style="text-align: center">
@@ -168,22 +168,14 @@
                         {{ log.application_id }}
                       </td>
                       <td style="text-align: center">
-                        {% if doctor_login %}
-                          {{ doctor_login }}
-                        {% elif disinfector_login %}
-                          {{ disinfector_login }}
-                        {% elif admin_login %}
-                          {{ admin_login }}
-                        {% else %}
-                          Неизвестно
-                        {% endif %}
+                          {{ login }}
                       </td>
                       <td style="text-align: center">
-                        {% if doctor_login %}
+                        {% if user_type == "doctor" %}
                           Врач
-                        {% elif disinfector_login %}
+                        {% elif user_type == "disinfector" %}
                           Дезинфектор
-                        {% elif admin_login %}
+                        {% elif user_type == "admin" %}
                           Администратор
                         {% else %}
                           Неизвестно
