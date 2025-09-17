@@ -1,4 +1,5 @@
 from .domain.services.user_service import UserInitializer
+from .utils.filters import localtime_filter
 from flask import Flask
 
 from .core.bundles import bundles, register_bundles
@@ -17,6 +18,7 @@ from .core.signals import register_signals
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.add_template_filter(localtime_filter, name="localtime")
 
     app.register_blueprint(application)
     app.register_blueprint(disinfection)
@@ -38,6 +40,8 @@ def create_app(config_class=Config):
     
     # SIGNALS
     register_signals(app)
+
+    
 
     with app.app_context():
         db.create_all()
