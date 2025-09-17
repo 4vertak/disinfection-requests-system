@@ -162,7 +162,7 @@
                     <tr>
                       <td style="text-align: center">{{ loop.index }}</td>
                       <td style="text-align: center">
-                        {{ log.change_time.strftime('%d-%m-%Y %H:%M') }}
+                        {{ log.change_time|localtime }}
                       </td>
                       <td style="text-align: center">
                         {{ log.application_id }}
