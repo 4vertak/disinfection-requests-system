@@ -179,6 +179,10 @@ $(document).ready(function () {
         data: data,
         minimumInputLength: 0,
         language: "ru",
+        //выкл сортировки
+        sorter: function (data) {
+          return data;
+        }
       });
     },
     error: function (error) {
