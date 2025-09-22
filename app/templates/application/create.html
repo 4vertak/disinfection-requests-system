@@ -97,10 +97,14 @@
           </div>
           <div class="col-xs-12 col-sm-12 col-md-6">
             <div class="row mb-4">
-              <label for="gdu_select" class="form-label text-uppercase"
-                >Выберите группу ДУ:</label
-              >
-              {{ form.gdu(class='form-select', id="gdu_select") }}
+              <div class="col-md-6">
+                  <label for="gdu_select" class="form-label text-uppercase">Выберите группу ДУ:</label >
+                        {{ form.gdu(class='form-select', id="gdu_select") }}
+              </div>
+              <div class="col-md-6">
+                  <label for="mbt_select" class="form-label text-uppercase">МБТ статус:</label>
+                      {{ form.mbt(class='form-select', id="mbt_select") }}
+              </div>
             </div>
           </div>
         </div>
