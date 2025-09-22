@@ -73,6 +73,7 @@ class ApplicationService:
     def create_application(form_data, user: User, doctor_obj: Optional[Doctor] = None):
         """Создание новой заявки"""
         try:
+            gdu_full = f"{form.gdu.data}-{form.mbt.data}" if form.mbt.data else form.gdu.data
             application = Application(
                 submission_date=datetime.now(),
                 patient_full_name=form_data.patient_full_name.data,
@@ -83,7 +84,7 @@ class ApplicationService:
                 workplace=form_data.workplace.data,
                 position=form_data.position.data,
                 diagnosis_id=form_data.diagnosis_id.data,
-                gdu=form_data.gdu.data,
+                gdu=gdu_full,
                 registration_date=form_data.registration_date.data,
                 focus_id=form_data.focus_id.data,
                 user_id=user.id,
@@ -118,6 +119,8 @@ class ApplicationService:
             raise PermissionError("No rights to edit this application")
 
         try:
+            gdu_full = f"{form.gdu.data}-{form.mbt.data}" if form.mbt.data else form.gdu.data
+            
             # Основные поля
             application.patient_full_name = form_data.patient_full_name.data
             application.birth_date = form_data.birth_date.data
@@ -127,7 +130,7 @@ class ApplicationService:
             application.workplace = form_data.workplace.data
             application.position = form_data.position.data
             application.diagnosis_id = form_data.diagnosis_id.data
-            application.gdu = form_data.gdu.data
+            application.gdu = gdu_full,
             application.registration_date = form_data.registration_date.data
             application.focus_id = form_data.focus_id.data
             application.user_id = user.id
