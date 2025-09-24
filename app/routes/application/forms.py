@@ -16,23 +16,8 @@ class ApplicationForm(FlaskForm):
     focus_id = SelectField("Очаг", coerce=int, validators=[DataRequired()])
     reason_application = SelectField("Причина дезинфекции", choices=[("hospitalization", "Госпитализация"), ("sheduled", "Плановая"), ("posthumously", "Посмертно")], default="hospitalization", validators=[Optional()],)
     hospitalization_date = DateField("Дата госпитализации", format="%Y-%m-%d", validators=[Optional()])
-    gdu = SelectField("Группа диспансерного наблюдения",
-        choices=[
-            choices=[
-            ("0", "0"),
-            ("IА", "IА"),
-            ("IБ", "IБ"),
-            ("IК", "IК"),
-            ("IIА", "IIА"),
-            ("IIБ", "IIБ"),
-            ("III", "III"),
-            ("IV", "IV"),
-            ("V", "V"),
-            ("VI", "VI"),
-        ],
-        validators=[DataRequired()],
-    )
-    mbt = SelectedField("МБТ статус:", choices=[("МБТ+", "МБТ+"), ("МБТ-", "МБТ-"), ("", "нет"),], validators=[DataRequired()],)
+    gdu = SelectField("Группа диспансерного наблюдения", choices=[("0", "0"),("IА", "IА"), ("IБ", "IБ"), ("IК", "IК"), ("IIА", "IIА"), ("IIБ", "IIБ"), ("III", "III"), ("IV", "IV"), ("V", "V"), ("VI", "VI"), ], validators=[Optional()], )
+    mbt = SelectField("МБТ статус:", choices=[("МБТ+", "МБТ+"), ("МБТ-", "МБТ-"), ("", "нет"),], validators=[Optional()],)
     registration_date = DateField("Дата взятия на учет", format="%Y-%m-%d", validators=[DataRequired()])
     place_of_hospitalization = StringField("Место госпитализации", validators=[Optional()])
 

@@ -16,24 +16,7 @@ from docxtpl import DocxTemplate
 
 
 class ApplicationService:
-    @staticmethod
-    def _get_or_create_doctor(doctor_full_name: str, doctor_area: Optional[str] = None) -> Doctor:
-        """
-        Находит врача в справочнике или создаёт нового.
-        """
-        if not doctor_full_name:
-            return None  # type: ignore  # тут ок, так как метод возвращает Doctor, но None не дойдёт дальше
 
-        doctor = Doctor.query.filter_by(full_name=doctor_full_name).first()
-        if doctor:
-            return doctor
-
-        doctor = Doctor(full_name=doctor_full_name, dispensary_area=doctor_area or "")
-        db.session.add(doctor)
-        db.session.flush()  # чтобы id был доступен сразу
-        return doctor
-    
-    
     @staticmethod
     def _get_or_create_doctor(doctor_full_name: str, area_id: Optional[int] = None) -> Doctor:
         """
@@ -43,8 +26,12 @@ class ApplicationService:
             return None  # type: ignore # не создаём врача без имени или участка
 
         # Ищем врача с таким ФИО и участком
-        doctor = Doctor.query.filter_by(full_name=doctor_full_name.strip(), area_id=area_id).first()
+        doctor = Doctor.query.filter_by(full_name=doctor_full_name.strip()).first()
         if doctor:
+            if doctor.area_id != area_id:
+                doctor.area_id = area_id
+                db.session.add(doctor)
+                db.session.flush()
             return doctor
 
         # Создаём нового врача
@@ -60,7 +47,7 @@ class ApplicationService:
             db.session.query(Application, Disinfection, Area, Doctor)
             .join(Disinfection, Disinfection.application_id == Application.id)
             .join(Doctor, Doctor.id == Application.doctor_id)
-            .join(Area, Area.id == Doctor.area_id)
+            .join(Area, Area.id == Application.area_id)
         )
 
         applications = query.order_by(
@@ -69,11 +56,27 @@ class ApplicationService:
         ).all()
 
         return applications
+
     @staticmethod
     def create_application(form_data, user: User, doctor_obj: Optional[Doctor] = None):
         """Создание новой заявки"""
         try:
-            gdu_full = f"{form.gdu.data}-{form.mbt.data}" if form.mbt.data else form.gdu.data
+            gdu_full = f"{form_data.gdu.data}-{form_data.mbt.data}" if form_data.mbt.data else form_data.gdu.data
+            doctor_id = None
+            doctor_full_name = None
+            doctor_area_id = None
+            if doctor_obj:
+                doctor_id = doctor_obj.id
+                doctor_full_name = doctor_obj.full_name
+                doctor_area_id = doctor_obj.area_id
+            #если выбран из списка 
+            elif form_data.doctor_id.data: 
+                doctor_id = form_data.doctor_id.data
+                doctor = Doctor.query.get(doctor_id)
+                if doctor:
+                    doctor_full_name = doctor.full_name
+                    doctor_area_id = doctor.area_id
+
             application = Application(
                 submission_date=datetime.now(),
                 patient_full_name=form_data.patient_full_name.data,
@@ -90,9 +93,9 @@ class ApplicationService:
                 user_id=user.id,
                 reason_application=form_data.reason_application.data,
                 status="incompleted",
-                doctor_id=doctor_obj.id if doctor_obj else (form_data.doctor_id.data if form_data.doctor_id.data != 0 else None),
-                doctor_full_name=form_data.doctor_full_name.data if form_data.doctor_full_name.data else None,
-                area_id=form_data.area_id.data,
+                doctor_id=doctor_id,
+                doctor_full_name=doctor_full_name,
+                area_id=doctor_area_id,
             )
 
             if form_data.reason_application.data == "hospitalization":
@@ -111,16 +114,31 @@ class ApplicationService:
 
     @staticmethod
     def update_application(application_id, form_data, user: User, doctor_obj: Optional[Doctor] = None):
-        application = Application.query.get(application_id)
-        if not application:
-            raise ValueError("Application not found")
-
-        if user.user_type == "doctor" and application.user_id != user.id:
-            raise PermissionError("No rights to edit this application")
-
         try:
-            gdu_full = f"{form.gdu.data}-{form.mbt.data}" if form.mbt.data else form.gdu.data
-            
+            application = Application.query.get(application_id)
+            if not application:
+                raise ValueError("Application not found")
+
+            if user.user_type == "doctor" and application.user_id != user.id:
+                raise PermissionError("No rights to edit this application")
+
+            gdu_full = f"{form_data.gdu.data}-{form_data.mbt.data}" if form_data.mbt.data else form_data.gdu.data
+
+            doctor_id = None
+            doctor_full_name = None
+            doctor_area_id = None
+            if doctor_obj:
+                doctor_id = doctor_obj.id
+                doctor_full_name = doctor_obj.full_name
+                doctor_area_id = doctor_obj.area_id
+            #если выбран из списка 
+            elif form_data.doctor_id.data: 
+                doctor_id = form_data.doctor_id.data
+                doctor = Doctor.query.get(doctor_id)
+                if doctor:
+                    doctor_full_name = doctor.full_name
+                    doctor_area_id = doctor.area_id
+
             # Основные поля
             application.patient_full_name = form_data.patient_full_name.data
             application.birth_date = form_data.birth_date.data
@@ -130,11 +148,14 @@ class ApplicationService:
             application.workplace = form_data.workplace.data
             application.position = form_data.position.data
             application.diagnosis_id = form_data.diagnosis_id.data
-            application.gdu = gdu_full,
+            application.gdu = gdu_full
             application.registration_date = form_data.registration_date.data
             application.focus_id = form_data.focus_id.data
             application.user_id = user.id
             application.reason_application = form_data.reason_application.data
+            application.doctor_id = doctor_id
+            application.doctor_full_name = doctor_full_name
+            application.area_id = doctor_area_id
 
             # Госпитализация
             if form_data.reason_application.data == "hospitalization":
@@ -143,17 +164,6 @@ class ApplicationService:
             else:
                 application.hospitalization_date = None
                 application.place_of_hospitalization = None
-
-            # Врач и участок — только через doctor_obj
-            if doctor_obj:
-                application.doctor_id = doctor_obj.id
-                application.doctor_full_name = doctor_obj.full_name
-                application.area_id = doctor_obj.area_id
-            else:
-                # Если не выбран врач — сбрасываем поля
-                application.doctor_id = None
-                application.doctor_full_name = form_data.doctor_full_name.data if form_data.doctor_full_name.data else None
-                application.area_id = form_data.area_id.data
 
             db.session.commit()
             return application

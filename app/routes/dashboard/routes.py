@@ -132,11 +132,11 @@ def all():
     all_areas = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'ДПДО', 'РПТД']
     epidemic_groups = ['I', 'II', 'III', 'IV', 'V', 'безадресные']
 
-    query = db.session.query(EpidemicFocus.name.label('epidemic_focus'),Area.name_area.label('area'),func.count(Application.id).label('count')).join(Application, Application.focus_id == EpidemicFocus.id).outerjoin(Doctor, Doctor.id == Application.user_id).outerjoin(Area, Area.id == Doctor.area_id).filter(Application.submission_date.between(start_date, end_date)).filter(Area.name_area.in_(all_areas)).group_by(EpidemicFocus.name, Area.name_area)
+    query = db.session.query(EpidemicFocus.name.label('epidemic_focus'),Area.name_area.label('area'),func.count(Application.id).label('count')).join(Application, Application.focus_id == EpidemicFocus.id).outerjoin(Area, Area.id == Application.area_id).filter(Application.submission_date.between(start_date, end_date)).filter(Area.name_area.in_(all_areas)).group_by(EpidemicFocus.name, Area.name_area)
     
     results = query.all()
 
-    posthumous_query = db.session.query(EpidemicFocus.name.label('epidemic_focus'),Area.name_area.label('area'),func.count(Application.id).label('posthumous_count')).join(Application, Application.focus_id == EpidemicFocus.id).outerjoin(Doctor, Doctor.id == Application.user_id).outerjoin(Area, Area.id == Doctor.area_id).filter(Application.submission_date.between(start_date, end_date)).filter(Application.reason_application == 'posthumously').filter(Area.name_area.in_(all_areas)).group_by(EpidemicFocus.name, Area.name_area)
+    posthumous_query = db.session.query(EpidemicFocus.name.label('epidemic_focus'),Area.name_area.label('area'),func.count(Application.id).label('posthumous_count')).join(Application, Application.focus_id == EpidemicFocus.id).outerjoin(Area, Area.id == Application.area_id).filter(Application.submission_date.between(start_date, end_date)).filter(Application.reason_application == 'posthumously').filter(Area.name_area.in_(all_areas)).group_by(EpidemicFocus.name, Area.name_area)
     
     posthumous_results = posthumous_query.all()
 
@@ -209,8 +209,7 @@ def generate_word_report():
                 func.count(Application.id).label("count"),
             )
             .join(Application, Application.focus_id == EpidemicFocus.id)
-            .outerjoin(Doctor, Doctor.id == Application.doctor_id)
-            .outerjoin(Area, Area.id == Doctor.area_id)
+            .outerjoin(Area, Area.id == Application.area_id)
             .filter(Application.submission_date.between(start_date, end_date))
             .filter(Area.name_area.in_(all_areas))
             .group_by(EpidemicFocus.name, Area.name_area)
@@ -225,8 +224,7 @@ def generate_word_report():
                 func.count(Application.id).label("posthumous_count"),
             )
             .join(Application, Application.focus_id == EpidemicFocus.id)
-            .outerjoin(Doctor, Doctor.id == Application.doctor_id)
-            .outerjoin(Area, Area.id == Doctor.area_id)
+            .outerjoin(Area, Area.id == Application.area_id)
             .filter(Application.submission_date.between(start_date, end_date))
             .filter(Application.reason_application == "posthumously")
             .filter(Area.name_area.in_(all_areas))
